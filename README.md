@@ -42,7 +42,7 @@ You can also add it directly to `Packages/manifest.json`:
 To pin a release, use a tag:
 
 ```json
-"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.2"
+"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.3"
 ```
 
 If the repository is private, Unity must have GitHub access through your local Git credentials.
@@ -145,7 +145,7 @@ https://github.com/RedHong01/ae2unityshader.git
 如果希望锁定某个 release，可以使用 tag：
 
 ```json
-"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.2"
+"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.3"
 ```
 
 如果 repo 是 private，Unity 需要能够通过你本地的 Git 凭据访问 GitHub。

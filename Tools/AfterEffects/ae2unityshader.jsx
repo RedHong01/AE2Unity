@@ -22,8 +22,11 @@
     var UI_PANEL_MIN_WIDTH = 300;
     var UI_PANEL_MIN_HEIGHT = 360;
     var UI_COMPACT_BREAKPOINT = 620;
-    var UI_COMPACT_HORIZONTAL_MARGIN = 48;
-    var UI_COMPACT_SCROLL_STEP = 48;
+    var UI_COMPACT_HORIZONTAL_MARGIN = 36;
+    var UI_COMPACT_SCROLL_STEP = 42;
+    var UI_COMPACT_SCROLL_EPSILON = 8;
+    var UI_NORMAL_PANEL_MARGINS = [16, 14, 16, 14];
+    var UI_COMPACT_PANEL_MARGINS = [10, 8, 8, 8];
 
     function buildPanel(owner) {
         var panel = owner instanceof Panel
@@ -31,9 +34,9 @@
             : new Window("palette", SCRIPT_NAME, undefined, { resizeable: true });
 
         panel.orientation = "column";
-        panel.alignChildren = ["fill", "top"];
+        panel.alignChildren = ["fill", "fill"];
         panel.spacing = 10;
-        panel.margins = [16, 14, 16, 14];
+        panel.margins = UI_NORMAL_PANEL_MARGINS;
         panel.minimumSize = [UI_PANEL_MIN_WIDTH, UI_PANEL_MIN_HEIGHT];
         panel.preferredSize = [820, 500];
 
@@ -65,7 +68,10 @@
             bar: compactScrollBar,
             value: 0,
             max: 0,
-            compact: false
+            compact: false,
+            armed: false,
+            viewportHeight: 0,
+            contentHeight: 0
         };
 
         compactScrollBar.onChanging = compactScrollBar.onChange = function () {
@@ -380,6 +386,7 @@
 
     function relayoutPanel(panel) {
         try {
+            resetCompactContentPosition(panel);
             applyResponsiveLayout(panel);
             panel.layout.layout(true);
             panel.layout.resize();
@@ -392,6 +399,9 @@
         var width = getPanelWidth(panel);
         var compact = width > 0 && width < UI_COMPACT_BREAKPOINT;
         var compactWidth = Math.max(160, width - UI_COMPACT_HORIZONTAL_MARGIN);
+
+        panel.spacing = compact ? 6 : 10;
+        panel.margins = compact ? UI_COMPACT_PANEL_MARGINS : UI_NORMAL_PANEL_MARGINS;
 
         walkControls(panel, function (control) {
             if (control.ae2unityHideInCompact) {
@@ -443,15 +453,34 @@
         if (!compact) {
             scroll.value = 0;
             scroll.max = 0;
+            scroll.armed = false;
+            scroll.viewportHeight = 0;
+            scroll.contentHeight = 0;
             scroll.bar.visible = false;
             setCompactScroll(panel, 0);
             return;
         }
 
-        var viewportHeight = getControlHeight(scroll.root);
+        var viewportHeight = getCompactViewportHeight(panel, scroll.root);
         var contentHeight = getVisibleContentHeight(scroll.content);
-        var maxScroll = Math.max(0, contentHeight - viewportHeight + 4);
+        if (viewportHeight <= 20 || contentHeight <= 0) {
+            scroll.value = 0;
+            scroll.max = 0;
+            scroll.viewportHeight = Math.max(0, viewportHeight);
+            scroll.contentHeight = Math.max(0, contentHeight);
+            scroll.bar.visible = false;
+            scroll.bar.enabled = false;
+            setCompactScroll(panel, 0);
+            return;
+        }
 
+        var maxScroll = Math.max(0, contentHeight - viewportHeight);
+        if (maxScroll <= UI_COMPACT_SCROLL_EPSILON) {
+            maxScroll = 0;
+        }
+
+        scroll.viewportHeight = viewportHeight;
+        scroll.contentHeight = contentHeight;
         scroll.max = maxScroll;
         scroll.bar.visible = maxScroll > 0;
         scroll.bar.enabled = maxScroll > 0;
@@ -460,6 +489,7 @@
             scroll.bar.maxvalue = maxScroll;
             scroll.bar.stepdelta = UI_COMPACT_SCROLL_STEP;
             scroll.bar.jumpdelta = Math.max(UI_COMPACT_SCROLL_STEP, viewportHeight - UI_COMPACT_SCROLL_STEP);
+            scroll.bar.preferredSize.height = Math.max(80, viewportHeight);
         } catch (ignoredScrollBarConfig) {
         }
 
@@ -484,7 +514,11 @@
         }
 
         try {
-            scroll.content.location = [scroll.content.location[0], -Math.round(nextValue)];
+            var offset = Math.round(nextValue);
+            var bounds = scroll.content.bounds;
+            var contentHeight = scroll.contentHeight || getVisibleContentHeight(scroll.content);
+            scroll.content.bounds = [bounds[0], -offset, bounds[2], Math.max(bounds[3], contentHeight) - offset];
+            scroll.content.location = [scroll.content.location[0], -offset];
         } catch (ignoredContentMove) {
         }
     }
@@ -510,11 +544,22 @@
             return;
         }
 
+        var activateHandler = function (event) {
+            activateCompactScroll(panel);
+            if (isMiddleMouseEvent(event)) {
+                try {
+                    event.preventDefault();
+                } catch (ignoredMiddlePreventDefault) {
+                }
+            }
+        };
+
         var handler = function (event) {
             if (event && event.ae2unityScrollHandled) {
                 return;
             }
 
+            activateCompactScroll(panel);
             var direction = getWheelDirection(event);
             if (direction === 0 || !scrollCompactBy(panel, direction)) {
                 return;
@@ -534,7 +579,7 @@
             }
         };
 
-        var events = ["mousewheel", "wheel", "scroll", "Scroll"];
+        var events = ["mousewheel", "MouseWheel", "wheel", "scroll", "Scroll"];
         for (var i = 0; i < events.length; i++) {
             try {
                 control.addEventListener(events[i], handler);
@@ -542,10 +587,46 @@
             }
         }
 
+        var activationEvents = ["mousedown", "MouseDown", "click", "Click"];
+        for (var j = 0; j < activationEvents.length; j++) {
+            try {
+                control.addEventListener(activationEvents[j], activateHandler);
+            } catch (ignoredActivationBind) {
+            }
+        }
+
         try {
             control.onMouseWheel = handler;
         } catch (ignoredOnMouseWheel) {
         }
+    }
+
+    function activateCompactScroll(panel) {
+        var scroll = panel.ae2unityScroll;
+        if (!scroll || !scroll.compact) {
+            return;
+        }
+
+        scroll.armed = true;
+        try {
+            panel.active = true;
+        } catch (ignoredPanelActivate) {
+        }
+    }
+
+    function isMiddleMouseEvent(event) {
+        if (!event) {
+            return false;
+        }
+
+        try {
+            if (event.button === 1 || event.which === 2) {
+                return true;
+            }
+        } catch (ignoredButtonCheck) {
+        }
+
+        return false;
     }
 
     function getWheelDirection(event) {
@@ -591,6 +672,22 @@
         return maxBottom;
     }
 
+    function getCompactViewportHeight(panel, scrollRoot) {
+        var height = getControlHeight(scrollRoot);
+        if (height > 20) {
+            return height;
+        }
+
+        var panelHeight = getControlHeight(panel);
+        if (panelHeight <= 0) {
+            return 0;
+        }
+
+        var top = getControlTop(scrollRoot);
+        var bottomMargin = getMarginValue(panel.margins, 3);
+        return Math.max(0, panelHeight - top - bottomMargin);
+    }
+
     function getControlHeight(control) {
         try {
             if (control.size && control.size.length > 1 && control.size[1] > 0) {
@@ -607,6 +704,48 @@
         }
 
         return 0;
+    }
+
+    function getControlTop(control) {
+        try {
+            if (control.location && control.location.length > 1) {
+                return Math.max(0, Number(control.location[1]) || 0);
+            }
+        } catch (ignoredLocationTop) {
+        }
+
+        try {
+            if (control.bounds) {
+                return Math.max(0, Number(control.bounds[1]) || 0);
+            }
+        } catch (ignoredBoundsTop) {
+        }
+
+        return 0;
+    }
+
+    function getMarginValue(margins, index) {
+        try {
+            if (margins && typeof margins.length === "number" && margins.length > index) {
+                return Number(margins[index]) || 0;
+            }
+            return Number(margins) || 0;
+        } catch (ignoredMarginRead) {
+        }
+
+        return 0;
+    }
+
+    function resetCompactContentPosition(panel) {
+        var scroll = panel.ae2unityScroll;
+        if (!scroll || !scroll.content) {
+            return;
+        }
+
+        try {
+            scroll.content.location = [0, 0];
+        } catch (ignoredResetLocation) {
+        }
     }
 
     function clampNumber(value, minValue, maxValue) {

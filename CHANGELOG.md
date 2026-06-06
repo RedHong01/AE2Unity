@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.3
+
+- Reworked compact AE panel scrolling so scrollbar range uses a guarded viewport height and avoids blank overscroll.
+- Added compact scroll activation when clicking inside the AE panel, including middle-mouse clicks before wheel scrolling.
+- Tightened compact panel margins and layout spacing for narrow docked sidebars.
+
 ## 0.2.2
 
 - Added compact-mode scrolling for narrow AE docked panels.
