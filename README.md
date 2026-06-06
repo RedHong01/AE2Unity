@@ -42,7 +42,7 @@ You can also add it directly to `Packages/manifest.json`:
 To pin a release, use a tag:
 
 ```json
-"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.5"
+"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.6"
 ```
 
 If the repository is private, Unity must have GitHub access through your local Git credentials.
@@ -103,6 +103,10 @@ Open `Project Settings > ae2unityshader`.
 
 Bridge utilities are also available in `Tools > ae2unityshader`.
 
+### License
+
+This project is released under the MIT License. Community users may use, modify, and redistribute it, including in commercial projects, as long as the copyright and license notice are preserved. See `LICENSE` for the full text.
+
 ## 中文
 
 `ae2unityshader` 是一个早期自动化工具框架，用来把受控范围内的 Adobe After Effects 2026 合成转换到 Unity 6 中，并生成 shader/material 资产。
@@ -145,7 +149,7 @@ https://github.com/RedHong01/ae2unityshader.git
 如果希望锁定某个 release，可以使用 tag：
 
 ```json
-"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.5"
+"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.6"
 ```
 
 如果 repo 是 private，Unity 需要能够通过你本地的 Git 凭据访问 GitHub。
@@ -205,3 +209,7 @@ Importer 会把复杂功能标记为 warning，而不是假装它们已经被 sh
 - `Bridge Output Path`：bridge import 的默认 Unity asset 文件夹。
 
 Bridge 工具也可以从 `Tools > ae2unityshader` 使用。
+
+### 开源许可证
+
+本项目使用 MIT License 发布。社区用户可以使用、修改和再分发，也可以用于商业项目，只需要保留版权和许可证声明。完整条款见 `LICENSE`。

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.6
+
+- Added an MIT open-source license for community use, modification, and redistribution.
+- Added package license metadata.
+- Added bilingual README license notes.
+
 ## 0.2.5
 
 - Added a compact pager for narrow AE docked panels so users can switch between Export, Result, Paths, and Media sections without relying on AE native panel scrolling.
