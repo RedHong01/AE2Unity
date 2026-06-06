@@ -23,22 +23,29 @@
     var UI_PANEL_MIN_HEIGHT = 360;
     var UI_COMPACT_BREAKPOINT = 620;
     var UI_COMPACT_HORIZONTAL_MARGIN = 36;
+    var UI_FULL_WINDOW_SIZE = [860, 560];
+    var UI_COMPACT_WINDOW_SIZE = [340, 560];
     var UI_NORMAL_PANEL_MARGINS = [16, 14, 16, 14];
     var UI_COMPACT_PANEL_MARGINS = [12, 10, 10, 10];
+    var standaloneWindows = [];
 
-    function buildPanel(owner) {
-        var panel = owner instanceof Panel
+    function buildPanel(owner, options) {
+        options = options || {};
+        var isDockedPanel = isPanelOwner(owner);
+        var panel = isDockedPanel
             ? owner
-            : new Window("palette", SCRIPT_NAME, undefined, { resizeable: true });
+            : new Window("palette", options.title || SCRIPT_NAME, undefined, { resizeable: true });
 
         panel.orientation = "column";
         panel.alignChildren = ["fill", "top"];
         panel.spacing = 10;
         panel.margins = UI_NORMAL_PANEL_MARGINS;
         panel.minimumSize = [UI_PANEL_MIN_WIDTH, UI_PANEL_MIN_HEIGHT];
-        panel.preferredSize = [820, 500];
+        panel.preferredSize = options.forceCompact ? UI_COMPACT_WINDOW_SIZE : UI_FULL_WINDOW_SIZE;
 
         panel.ae2unityCompactActive = false;
+        panel.ae2unityForceCompact = options.forceCompact === true;
+        panel.ae2unityIsStandaloneWindow = !isDockedPanel;
 
         var title = panel.add("statictext", undefined, "Export compositions directly into a Unity project");
         title.alignment = ["fill", "top"];
@@ -46,28 +53,54 @@
         compactHide(title);
         setHelpTip(title, "Export AE composition data, media, or both into a selected Unity project.");
 
+        var standaloneModeGroup = panel.add("group");
+        standaloneModeGroup.orientation = "row";
+        standaloneModeGroup.alignChildren = ["left", "center"];
+        standaloneModeGroup.alignment = ["fill", "top"];
+        standaloneModeGroup.spacing = 8;
+        standaloneModeGroup.margins = 0;
+        standaloneModeGroup.ae2unityStandaloneOnly = true;
+        setHelpTip(standaloneModeGroup, "Standalone window size shortcuts.");
+        var compactWindowButton = standaloneModeGroup.add("button", undefined, "Compact");
+        fixedControl(compactWindowButton, 112, 26);
+        compactWindowButton.ae2unityPreserveCompactWidth = true;
+        setHelpTip(compactWindowButton, "Switch this standalone window to compact mode (Ctrl/Cmd+Shift+C).");
+        var fullWindowButton = standaloneModeGroup.add("button", undefined, "Full Size");
+        fixedControl(fullWindowButton, 112, 26);
+        fullWindowButton.ae2unityPreserveCompactWidth = true;
+        setHelpTip(fullWindowButton, "Restore this standalone window to the full layout (Ctrl/Cmd+Shift+F).");
+        panel.ae2unityStandaloneControls = {
+            group: standaloneModeGroup,
+            compactButton: compactWindowButton,
+            fullButton: fullWindowButton
+        };
+
         var compactPagerGroup = panel.add("group");
         compactPagerGroup.orientation = "row";
         compactPagerGroup.alignChildren = ["left", "center"];
         compactPagerGroup.alignment = ["fill", "top"];
-        compactPagerGroup.spacing = 6;
+        compactPagerGroup.spacing = 4;
         compactPagerGroup.margins = 0;
         var compactPrevButton = compactPagerGroup.add("button", undefined, "Up");
-        fixedControl(compactPrevButton, 48, 24);
+        fixedControl(compactPrevButton, 46, 24);
         compactPrevButton.ae2unityPreserveCompactWidth = true;
         setHelpTip(compactPrevButton, "Show the previous compact panel section.");
         var compactPageText = compactPagerGroup.add("statictext", undefined, "Compact");
         compactPageText.alignment = ["fill", "center"];
-        compactPageText.minimumSize.width = 96;
+        compactPageText.minimumSize.width = 56;
         setHelpTip(compactPageText, "Current compact panel section.");
         var compactPageScrollbar = compactPagerGroup.add("scrollbar", undefined, 0, 0, 0);
-        fixedControl(compactPageScrollbar, 72, 16);
+        fixedControl(compactPageScrollbar, 44, 16);
         compactPageScrollbar.ae2unityPreserveCompactWidth = true;
         setHelpTip(compactPageScrollbar, "Drag to switch compact panel sections.");
         var compactNextButton = compactPagerGroup.add("button", undefined, "Down");
-        fixedControl(compactNextButton, 56, 24);
+        fixedControl(compactNextButton, 50, 24);
         compactNextButton.ae2unityPreserveCompactWidth = true;
         setHelpTip(compactNextButton, "Show the next compact panel section.");
+        var compactFullWindowButton = compactPagerGroup.add("button", undefined, "Full");
+        fixedControl(compactFullWindowButton, 46, 24);
+        compactFullWindowButton.ae2unityPreserveCompactWidth = true;
+        setHelpTip(compactFullWindowButton, "Open a full standalone ae2unityshader window.");
 
         panel.ae2unityCompactPager = {
             group: compactPagerGroup,
@@ -75,6 +108,7 @@
             nextButton: compactNextButton,
             pageText: compactPageText,
             scrollbar: compactPageScrollbar,
+            fullButton: compactFullWindowButton,
             pageIndex: 0,
             pages: []
         };
@@ -340,8 +374,18 @@
         compactPageScrollbar.onChanging = compactPageScrollbar.onChange = function () {
             setCompactPage(panel, Math.round(compactPageScrollbar.value));
         };
+        compactFullWindowButton.onClick = function () {
+            openStandaloneWindow(false);
+        };
+        compactWindowButton.onClick = function () {
+            setStandaloneWindowMode(panel, true);
+        };
+        fullWindowButton.onClick = function () {
+            setStandaloneWindowMode(panel, false);
+        };
 
         bindCompactMouseWheelTree(panel, panel);
+        bindStandaloneShortcutTree(panel, panel);
         relayoutPanel(panel);
         return panel;
     }
@@ -364,6 +408,77 @@
         label.ae2unityLabelText = labelText;
         setHelpTip(label, helpTip);
         return row;
+    }
+
+    function isPanelOwner(owner) {
+        try {
+            return owner instanceof Panel;
+        } catch (ignoredPanelCheck) {
+            return false;
+        }
+    }
+
+    function openStandaloneWindow(forceCompact) {
+        var standalone = buildPanel(null, {
+            title: SCRIPT_NAME,
+            forceCompact: forceCompact === true
+        });
+        standaloneWindows.push(standalone);
+        resizeStandaloneWindow(standalone, forceCompact ? UI_COMPACT_WINDOW_SIZE : UI_FULL_WINDOW_SIZE);
+        try {
+            standalone.onClose = function () {
+                removeStandaloneWindow(standalone);
+            };
+        } catch (ignoredStandaloneClose) {
+        }
+        try {
+            standalone.center();
+        } catch (ignoredStandaloneCenter) {
+        }
+        standalone.show();
+        relayoutPanel(standalone);
+        return standalone;
+    }
+
+    function removeStandaloneWindow(windowToRemove) {
+        for (var i = standaloneWindows.length - 1; i >= 0; i--) {
+            if (standaloneWindows[i] === windowToRemove) {
+                standaloneWindows.splice(i, 1);
+            }
+        }
+    }
+
+    function setStandaloneWindowMode(panel, compact) {
+        if (!panel || !panel.ae2unityIsStandaloneWindow) {
+            openStandaloneWindow(compact);
+            return;
+        }
+
+        panel.ae2unityForceCompact = compact === true;
+        resizeStandaloneWindow(panel, compact ? UI_COMPACT_WINDOW_SIZE : UI_FULL_WINDOW_SIZE);
+        relayoutPanel(panel);
+    }
+
+    function resizeStandaloneWindow(panel, size) {
+        if (!panel || !size) {
+            return;
+        }
+
+        var width = size[0];
+        var height = size[1];
+        try {
+            if (panel.bounds) {
+                var left = panel.bounds[0];
+                var top = panel.bounds[1];
+                panel.bounds = [left, top, left + width, top + height];
+            }
+        } catch (ignoredBoundsResize) {
+        }
+        try {
+            panel.preferredSize = [width, height];
+            panel.size = [width, height];
+        } catch (ignoredSizeResize) {
+        }
     }
 
     function setHelpTip(control, text) {
@@ -419,7 +534,7 @@
 
     function applyResponsiveLayout(panel) {
         var width = getPanelWidth(panel);
-        var compact = width > 0 && width < UI_COMPACT_BREAKPOINT;
+        var compact = panel.ae2unityForceCompact || (width > 0 && width < UI_COMPACT_BREAKPOINT);
         var compactWidth = Math.max(160, width - UI_COMPACT_HORIZONTAL_MARGIN);
         panel.ae2unityIsCompact = compact;
 
@@ -427,6 +542,10 @@
         panel.margins = compact ? UI_COMPACT_PANEL_MARGINS : UI_NORMAL_PANEL_MARGINS;
 
         walkControls(panel, function (control) {
+            if (control.ae2unityStandaloneOnly) {
+                setCompactCollapsed(control, !panel.ae2unityIsStandaloneWindow);
+            }
+
             if (control.ae2unityHideInCompact && !control.ae2unityCompactPageItem) {
                 setCompactCollapsed(control, compact);
             }
@@ -462,7 +581,22 @@
             }
         });
 
+        updateStandaloneControls(panel, compact);
         applyCompactPages(panel, compact);
+    }
+
+    function updateStandaloneControls(panel, compact) {
+        var controls = panel.ae2unityStandaloneControls;
+        if (!controls) {
+            return;
+        }
+
+        setCompactCollapsed(controls.group, !panel.ae2unityIsStandaloneWindow);
+        try {
+            controls.compactButton.enabled = panel.ae2unityIsStandaloneWindow && !compact;
+            controls.fullButton.enabled = panel.ae2unityIsStandaloneWindow && compact;
+        } catch (ignoredStandaloneEnabledState) {
+        }
     }
 
     function setCompactPages(panel, pages) {
@@ -658,6 +792,91 @@
         walkControls(control, function (child) {
             bindCompactMouseWheel(child, panel);
         });
+    }
+
+    function bindStandaloneShortcutTree(control, panel) {
+        walkControls(control, function (child) {
+            bindStandaloneShortcut(child, panel);
+        });
+    }
+
+    function bindStandaloneShortcut(control, panel) {
+        if (!control || !control.addEventListener) {
+            return;
+        }
+
+        var handler = function (event) {
+            if (!panel || !panel.ae2unityIsStandaloneWindow) {
+                return;
+            }
+
+            if (matchesShortcut(event, "C", 67)) {
+                setStandaloneWindowMode(panel, true);
+                consumeEvent(event);
+                return;
+            }
+
+            if (matchesShortcut(event, "F", 70)) {
+                setStandaloneWindowMode(panel, false);
+                consumeEvent(event);
+            }
+        };
+
+        try {
+            control.addEventListener("keydown", handler);
+        } catch (ignoredKeydownBind) {
+        }
+        try {
+            control.addEventListener("KeyDown", handler);
+        } catch (ignoredKeyDownBind) {
+        }
+    }
+
+    function matchesShortcut(event, keyCharacter, keyCode) {
+        if (!event) {
+            return false;
+        }
+
+        var hasModifier = false;
+        try {
+            hasModifier = event.ctrlKey || event.metaKey || event.commandKey;
+        } catch (ignoredModifierCheck) {
+            hasModifier = false;
+        }
+        if (!hasModifier || !event.shiftKey) {
+            return false;
+        }
+
+        try {
+            if (event.keyCode === keyCode) {
+                return true;
+            }
+        } catch (ignoredKeyCodeCheck) {
+        }
+
+        var keyName = "";
+        try {
+            keyName = String(event.keyName || event.keyIdentifier || event.key || "").toUpperCase();
+        } catch (ignoredKeyNameRead) {
+            keyName = "";
+        }
+
+        return keyName === keyCharacter || keyName === ("U+00" + keyCode.toString(16).toUpperCase());
+    }
+
+    function consumeEvent(event) {
+        if (!event) {
+            return;
+        }
+
+        try {
+            event.preventDefault();
+        } catch (ignoredPreventDefault) {
+        }
+        try {
+            event.stopPropagation();
+        } catch (ignoredStopPropagation) {
+        }
     }
 
     function bindCompactMouseWheel(control, panel) {

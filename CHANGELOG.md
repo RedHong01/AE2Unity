@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.7
+
+- Added a compact-panel `Full` button that opens a full standalone ae2unityshader window from a narrow AE docked sidebar.
+- Added standalone window `Compact` and `Full Size` controls.
+- Added best-effort standalone shortcuts: `Ctrl/Cmd+Shift+C` for compact mode and `Ctrl/Cmd+Shift+F` for full mode.
+
 ## 0.2.6
 
 - Added an MIT open-source license for community use, modification, and redistribution.

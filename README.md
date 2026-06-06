@@ -42,7 +42,7 @@ You can also add it directly to `Packages/manifest.json`:
 To pin a release, use a tag:
 
 ```json
-"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.6"
+"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.7"
 ```
 
 If the repository is private, Unity must have GitHub access through your local Git credentials.
@@ -69,7 +69,9 @@ The AE panel reads Unity Hub's local `projects-v1.json` and `projectSortPreferen
 
 Panels opened from the `Window` menu can be dragged by their panel tab and docked into AE sidebars or saved workspaces. If you run the JSX through `File > Scripts > Run Script File...`, After Effects opens it as a standalone palette, which is useful for testing but cannot be docked into the workspace.
 
-The panel switches to a compact paged layout when docked into a narrow sidebar. Compact mode groups controls into Export, Result, Paths, and Media sections. Use the compact `Up`/`Down` controls, the compact scrollbar, or mouse wheel when AE forwards wheel events to browse sections. Wider floating or docked layouts show the full set of path, media, refresh, reference frame, and generation options at once.
+The panel switches to a compact paged layout when docked into a narrow sidebar. Compact mode groups controls into Export, Result, Paths, and Media sections. Use the compact `Up`/`Down` controls, the compact scrollbar, or mouse wheel when AE forwards wheel events to browse sections. The compact header also includes `Full`, which opens a complete standalone ae2unityshader window without removing the docked panel.
+
+Standalone windows include `Compact` and `Full Size` buttons. You can also use `Ctrl/Cmd+Shift+C` to switch a standalone window into compact mode and `Ctrl/Cmd+Shift+F` to restore the full layout. Wider floating or docked layouts show the full set of path, media, refresh, reference frame, and generation options at once.
 
 ### Export Modes
 
@@ -149,7 +151,7 @@ https://github.com/RedHong01/ae2unityshader.git
 如果希望锁定某个 release，可以使用 tag：
 
 ```json
-"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.6"
+"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.7"
 ```
 
 如果 repo 是 private，Unity 需要能够通过你本地的 Git 凭据访问 GitHub。
@@ -176,7 +178,9 @@ AE 面板会读取 Unity Hub 本地的 `projects-v1.json` 和 `projectSortPrefer
 
 从 `Window` 菜单打开的面板可以拖拽 tab，并吸附到 AE 的侧边栏或保存进 workspace。如果通过 `File > Scripts > Run Script File...` 运行 JSX，AE 会把它作为独立 palette 打开，这适合测试，但不能吸附到 AE workspace 中。
 
-当面板被吸附到较窄侧边栏时，会切换到紧凑分页布局。紧凑模式会把控件分成 Export、Result、Paths 和 Media 几个区域。你可以用紧凑模式里的 `Up`/`Down`、小 scrollbar，或者在 AE 把滚轮事件传给 ScriptUI 时直接用鼠标滚轮切换区域。较宽的浮窗或停靠布局会一次性显示完整的 path、media、refresh、reference frame 和 generation 选项。
+当面板被吸附到较窄侧边栏时，会切换到紧凑分页布局。紧凑模式会把控件分成 Export、Result、Paths 和 Media 几个区域。你可以用紧凑模式里的 `Up`/`Down`、小 scrollbar，或者在 AE 把滚轮事件传给 ScriptUI 时直接用鼠标滚轮切换区域。紧凑标题栏里也有 `Full` 按钮，可以在不移除停靠面板的情况下打开一个完整的独立 ae2unityshader 窗口。
+
+独立窗口里有 `Compact` 和 `Full Size` 按钮。你也可以用 `Ctrl/Cmd+Shift+C` 把独立窗口切到紧凑模式，用 `Ctrl/Cmd+Shift+F` 恢复完整布局。较宽的浮窗或停靠布局会一次性显示完整的 path、media、refresh、reference frame 和 generation 选项。
 
 ### 导出模式
 
