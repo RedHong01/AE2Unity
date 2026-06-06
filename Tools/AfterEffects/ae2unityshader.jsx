@@ -23,6 +23,10 @@
     var UI_PANEL_MIN_HEIGHT = 360;
     var UI_COMPACT_BREAKPOINT = 620;
     var UI_COMPACT_HORIZONTAL_MARGIN = 36;
+    var UI_COMPACT_ROW_HEIGHT = 52;
+    var UI_COMPACT_TALL_ROW_HEIGHT = 82;
+    var UI_COMPACT_OPTIONS_ROW_HEIGHT = 34;
+    var UI_COMPACT_MEDIA_OPTIONS_HEIGHT = 112;
     var UI_COMPACT_RESULT_GROUP_HEIGHT = 178;
     var UI_COMPACT_RESULT_STATUS_HEIGHT = 132;
     var UI_FULL_WINDOW_SIZE = [860, 560];
@@ -85,7 +89,7 @@
         compactPagerGroup.spacing = 4;
         compactPagerGroup.margins = 0;
         var compactPrevButton = compactPagerGroup.add("button", undefined, "Up");
-        fixedControl(compactPrevButton, 46, 24);
+        fixedControl(compactPrevButton, 38, 24);
         compactPrevButton.ae2unityPreserveCompactWidth = true;
         setHelpTip(compactPrevButton, "Show the previous compact panel section.");
         var compactPageText = compactPagerGroup.add("statictext", undefined, "Compact");
@@ -93,19 +97,19 @@
         compactPageText.minimumSize.width = 56;
         setHelpTip(compactPageText, "Current compact panel section.");
         var compactPageScrollbar = compactPagerGroup.add("scrollbar", undefined, 0, 0, 0);
-        fixedControl(compactPageScrollbar, 44, 16);
+        fixedControl(compactPageScrollbar, 32, 16);
         compactPageScrollbar.ae2unityPreserveCompactWidth = true;
         setHelpTip(compactPageScrollbar, "Drag to switch compact panel sections.");
         var compactRunExportButton = compactPagerGroup.add("button", undefined, "Run");
-        fixedControl(compactRunExportButton, 46, 24);
+        fixedControl(compactRunExportButton, 42, 24);
         compactRunExportButton.ae2unityPreserveCompactWidth = true;
         setHelpTip(compactRunExportButton, "Run the selected export workflow from compact mode.");
         var compactNextButton = compactPagerGroup.add("button", undefined, "Down");
-        fixedControl(compactNextButton, 50, 24);
+        fixedControl(compactNextButton, 46, 24);
         compactNextButton.ae2unityPreserveCompactWidth = true;
         setHelpTip(compactNextButton, "Show the next compact panel section.");
         var compactFullWindowButton = compactPagerGroup.add("button", undefined, "Full");
-        fixedControl(compactFullWindowButton, 46, 24);
+        fixedControl(compactFullWindowButton, 42, 24);
         compactFullWindowButton.ae2unityPreserveCompactWidth = true;
         setHelpTip(compactFullWindowButton, "Open a full standalone ae2unityshader window.");
 
@@ -122,6 +126,7 @@
         };
 
         var projectGroup = createFormRow(panel, "Unity Project", "Select the Unity project that will receive exported assets.");
+        projectGroup.ae2unityCompactVisibleHeight = UI_COMPACT_ROW_HEIGHT;
         var projectDropdown = projectGroup.add("dropdownlist", undefined, []);
         stretchControl(projectDropdown, 320, 220);
         setHelpTip(projectDropdown, "Choose a Unity Hub project to export into.");
@@ -136,22 +141,28 @@
 
         var pathGroup = createFormRow(panel, "Path", "Absolute folder path for the selected Unity project.");
         compactHide(pathGroup);
+        pathGroup.ae2unityCompactVisibleHeight = UI_COMPACT_ROW_HEIGHT;
         var projectPathText = pathGroup.add("edittext", undefined, loadSetting("UnityProjectPath", ""));
         stretchControl(projectPathText, UI_FIELD_WIDTH, 260);
         setHelpTip(projectPathText, "Absolute path to the Unity project root.");
 
         var exportPathGroup = createFormRow(panel, ".ae2shader Folder", "Unity Assets-relative folder for .ae2shader exports.");
         compactHide(exportPathGroup);
+        exportPathGroup.ae2unityCompactVisibleHeight = UI_COMPACT_ROW_HEIGHT;
         var relativePathText = exportPathGroup.add("edittext", undefined, loadSetting("UnityExportRelativePath", DEFAULT_UNITY_EXPORT_RELATIVE_PATH));
         stretchControl(relativePathText, UI_FIELD_WIDTH, 260);
         setHelpTip(relativePathText, "Assets-relative folder where Unity imports .ae2shader files.");
 
         var compGroup = createFormRow(panel, "Composition", "Choose the AE composition source for this export.");
+        compGroup.ae2unityCompositionGroup = true;
+        compGroup.ae2unityCompactVisibleHeight = UI_COMPACT_TALL_ROW_HEIGHT;
         var compSourceDropdown = compGroup.add("dropdownlist", undefined, ["Current Active Comp", "Specific Comp"]);
         fixedControl(compSourceDropdown, UI_MEDIUM_WIDTH);
         setHelpTip(compSourceDropdown, "Use the active comp or choose a specific comp from the project.");
         compSourceDropdown.selection = loadSetting("CompositionSource", "active") === "specific" ? 1 : 0;
+        panel.ae2unityCompSourceDropdown = compSourceDropdown;
         var compDropdown = compGroup.add("dropdownlist", undefined, []);
+        compDropdown.ae2unitySpecificCompOnly = true;
         stretchControl(compDropdown, 300, 220);
         setHelpTip(compDropdown, "Select the specific composition to export.");
         var refreshCompsButton = compGroup.add("button", undefined, "Refresh");
@@ -160,6 +171,7 @@
         setHelpTip(refreshCompsButton, "Reload compositions from the current AE project.");
 
         var modeGroup = createFormRow(panel, "Export Mode", "Choose which AE-to-Unity workflow to run.");
+        modeGroup.ae2unityCompactVisibleHeight = UI_COMPACT_ROW_HEIGHT;
         var exportModeDropdown = modeGroup.add("dropdownlist", undefined, [
             "AEBridge: .ae2shader -> Unity shader/material",
             "AEBridge + Media Encoder video",
@@ -173,12 +185,14 @@
 
         var mediaFolderGroup = createFormRow(panel, "Media Folder", "Unity Assets-relative folder for rendered media.");
         compactHide(mediaFolderGroup);
+        mediaFolderGroup.ae2unityCompactVisibleHeight = UI_COMPACT_ROW_HEIGHT;
         var mediaPathText = mediaFolderGroup.add("edittext", undefined, loadSetting("MediaExportRelativePath", DEFAULT_MEDIA_EXPORT_RELATIVE_PATH));
         stretchControl(mediaPathText, UI_FIELD_WIDTH, 260);
         setHelpTip(mediaPathText, "Assets-relative folder where AME-rendered media will be saved.");
 
         var mediaOptionsGroup = createFormRow(panel, "Media", "Media Encoder output format and template controls.");
         compactHide(mediaOptionsGroup);
+        mediaOptionsGroup.ae2unityCompactVisibleHeight = UI_COMPACT_MEDIA_OPTIONS_HEIGHT;
         var mediaExtensionDropdown = mediaOptionsGroup.add("dropdownlist", undefined, ["mp4", "mov", "webm"]);
         fixedControl(mediaExtensionDropdown, UI_SMALL_WIDTH);
         setHelpTip(mediaExtensionDropdown, "Choose the output file extension for the rendered media.");
@@ -196,6 +210,7 @@
 
         var optionsGroup = createFormRow(panel, "", "Optional export behaviors.");
         compactHide(optionsGroup);
+        optionsGroup.ae2unityCompactVisibleHeight = UI_COMPACT_OPTIONS_ROW_HEIGHT;
         var referenceFramesCheckbox = optionsGroup.add("checkbox", undefined, "Reference frames");
         fixedControl(referenceFramesCheckbox, 170);
         setHelpTip(referenceFramesCheckbox, "Export PNG reference frames for visual comparison in Unity.");
@@ -209,7 +224,6 @@
         runExportButton.alignment = ["fill", "top"];
         runExportButton.preferredSize.height = 34;
         runExportButton.ae2unityCompactVisibleHeight = 34;
-        compactHide(runExportButton);
         setHelpTip(runExportButton, "Run the selected export workflow.");
         var resultGroup = panel.add("group");
         resultGroup.orientation = "column";
@@ -238,7 +252,7 @@
         setCompactPages(panel, [
             {
                 title: "Export",
-                controls: [projectGroup, compGroup, modeGroup]
+                controls: [projectGroup, compGroup, modeGroup, runExportButton]
             },
             {
                 title: "Result",
@@ -301,6 +315,7 @@
         compSourceDropdown.onChange = function () {
             saveSetting("CompositionSource", compSourceDropdown.selection && compSourceDropdown.selection.index === 1 ? "specific" : "active");
             refreshOutputTemplateDropdown(outputTemplateDropdown, compSourceDropdown, compDropdown, status);
+            relayoutPanel(panel);
         };
 
         compDropdown.onChange = function () {
@@ -554,6 +569,59 @@
         return control;
     }
 
+    function applyCompactVisibleSize(control, compactWidth, panel) {
+        if (!control) {
+            return;
+        }
+
+        var height = getEffectiveCompactVisibleHeight(control, panel);
+        if (height > 0) {
+            try {
+                control.minimumSize.height = height;
+                control.preferredSize.height = height;
+                control.maximumSize.height = height;
+            } catch (ignoredCompactVisibleHeight) {
+            }
+        }
+
+        try {
+            if (compactWidth && compactWidth > 0 && !control.ae2unityPreserveCompactWidth) {
+                control.alignment = ["fill", "top"];
+                control.minimumSize.width = 80;
+                control.preferredSize.width = compactWidth;
+            }
+        } catch (ignoredCompactVisibleWidth) {
+        }
+    }
+
+    function getEffectiveCompactVisibleHeight(control, panel) {
+        if (!control) {
+            return 0;
+        }
+
+        if (control.ae2unityCompositionGroup && !isSpecificCompositionMode(panel)) {
+            return UI_COMPACT_ROW_HEIGHT;
+        }
+
+        try {
+            if (control.ae2unityCompactVisibleHeight && control.ae2unityCompactVisibleHeight > 0) {
+                return control.ae2unityCompactVisibleHeight;
+            }
+        } catch (ignoredCompactVisibleHeightRead) {
+        }
+
+        return 0;
+    }
+
+    function isSpecificCompositionMode(panel) {
+        try {
+            var dropdown = panel ? panel.ae2unityCompSourceDropdown : null;
+            return dropdown && dropdown.selection && dropdown.selection.index === 1;
+        } catch (ignoredSpecificCompositionMode) {
+            return false;
+        }
+    }
+
     function relayoutPanel(panel) {
         try {
             applyResponsiveLayout(panel);
@@ -581,10 +649,17 @@
                 setCompactCollapsed(control, compact);
             }
 
+            if (control.ae2unitySpecificCompOnly) {
+                setCompactCollapsed(control, compact && !isSpecificCompositionMode(panel));
+            }
+
             if (control.ae2unityIsFormRow) {
                 control.orientation = compact ? "column" : "row";
                 control.alignChildren = compact ? ["fill", "top"] : ["left", "center"];
                 control.spacing = compact ? 4 : 10;
+                if (compact && control.ae2unityCompactVisibleHeight) {
+                    applyCompactVisibleSize(control, compactWidth, panel);
+                }
             }
 
             if (control.ae2unityIsFormLabel) {
@@ -687,11 +762,16 @@
             return;
         }
 
+        var compactWidth = Math.max(160, getPanelWidth(panel) - UI_COMPACT_HORIZONTAL_MARGIN);
         pager.pageIndex = clampInteger(pager.pageIndex, 0, pageCount - 1);
         for (var i = 0; i < pages.length; i++) {
             var controls = pages[i].controls || [];
             for (var j = 0; j < controls.length; j++) {
-                setCompactCollapsed(controls[j], i !== pager.pageIndex);
+                var isCollapsed = i !== pager.pageIndex;
+                setCompactCollapsed(controls[j], isCollapsed);
+                if (!isCollapsed) {
+                    applyCompactVisibleSize(controls[j], compactWidth, panel);
+                }
             }
         }
 

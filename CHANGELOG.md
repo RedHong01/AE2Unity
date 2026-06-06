@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.12
+
+- Rebalanced every compact page with explicit narrow-panel heights for Export, Result, Paths, and Media.
+- Restored the full-width `Run Export` button inside the compact Export page while keeping the compact header `Run` shortcut.
+- Hid the specific composition dropdown in compact mode unless `Specific Comp` is selected, reducing Export page height.
+- Reapplied compact sizing whenever pages switch so controls do not inherit stale full-layout sizes.
+
 ## 0.2.11
 
 - Added a compact header `Run` button that is always visible on the compact Export page.
