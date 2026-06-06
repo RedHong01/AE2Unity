@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.5
+
+- Added a compact pager for narrow AE docked panels so users can switch between Export, Result, Paths, and Media sections without relying on AE native panel scrolling.
+- Wired compact mouse wheel events to page switching when After Effects delivers wheel events to ScriptUI.
+- Added Up/Down buttons and a compact scrollbar as reliable fallback controls for browsing compact sections.
+
 ## 0.2.4
 
 - Restored compact AE panel controls to the native ScriptUI panel layout so core fields are not clipped in docked sidebars.

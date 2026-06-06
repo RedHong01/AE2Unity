@@ -46,6 +46,39 @@
         compactHide(title);
         setHelpTip(title, "Export AE composition data, media, or both into a selected Unity project.");
 
+        var compactPagerGroup = panel.add("group");
+        compactPagerGroup.orientation = "row";
+        compactPagerGroup.alignChildren = ["left", "center"];
+        compactPagerGroup.alignment = ["fill", "top"];
+        compactPagerGroup.spacing = 6;
+        compactPagerGroup.margins = 0;
+        var compactPrevButton = compactPagerGroup.add("button", undefined, "Up");
+        fixedControl(compactPrevButton, 48, 24);
+        compactPrevButton.ae2unityPreserveCompactWidth = true;
+        setHelpTip(compactPrevButton, "Show the previous compact panel section.");
+        var compactPageText = compactPagerGroup.add("statictext", undefined, "Compact");
+        compactPageText.alignment = ["fill", "center"];
+        compactPageText.minimumSize.width = 96;
+        setHelpTip(compactPageText, "Current compact panel section.");
+        var compactPageScrollbar = compactPagerGroup.add("scrollbar", undefined, 0, 0, 0);
+        fixedControl(compactPageScrollbar, 72, 16);
+        compactPageScrollbar.ae2unityPreserveCompactWidth = true;
+        setHelpTip(compactPageScrollbar, "Drag to switch compact panel sections.");
+        var compactNextButton = compactPagerGroup.add("button", undefined, "Down");
+        fixedControl(compactNextButton, 56, 24);
+        compactNextButton.ae2unityPreserveCompactWidth = true;
+        setHelpTip(compactNextButton, "Show the next compact panel section.");
+
+        panel.ae2unityCompactPager = {
+            group: compactPagerGroup,
+            prevButton: compactPrevButton,
+            nextButton: compactNextButton,
+            pageText: compactPageText,
+            scrollbar: compactPageScrollbar,
+            pageIndex: 0,
+            pages: []
+        };
+
         var projectGroup = createFormRow(panel, "Unity Project", "Select the Unity project that will receive exported assets.");
         var projectDropdown = projectGroup.add("dropdownlist", undefined, []);
         stretchControl(projectDropdown, 320, 220);
@@ -142,6 +175,25 @@
         status.alignment = ["fill", "top"];
         status.preferredSize.height = 48;
         setHelpTip(status, "Shows export progress, warnings, and bridge results.");
+
+        setCompactPages(panel, [
+            {
+                title: "Export",
+                controls: [projectGroup, compGroup, modeGroup, runExportButton]
+            },
+            {
+                title: "Result",
+                controls: [checkResultButton, status]
+            },
+            {
+                title: "Paths",
+                controls: [pathGroup, exportPathGroup, optionsGroup]
+            },
+            {
+                title: "Media",
+                controls: [mediaFolderGroup, mediaOptionsGroup]
+            }
+        ]);
 
         refreshProjectDropdown(projectDropdown, projectPathText, status);
         refreshCompositionDropdown(compDropdown, status);
@@ -279,6 +331,16 @@
             relayoutPanel(panel);
         };
 
+        compactPrevButton.onClick = function () {
+            advanceCompactPage(panel, -1);
+        };
+        compactNextButton.onClick = function () {
+            advanceCompactPage(panel, 1);
+        };
+        compactPageScrollbar.onChanging = compactPageScrollbar.onChange = function () {
+            setCompactPage(panel, Math.round(compactPageScrollbar.value));
+        };
+
         bindCompactMouseWheelTree(panel, panel);
         relayoutPanel(panel);
         return panel;
@@ -365,7 +427,7 @@
         panel.margins = compact ? UI_COMPACT_PANEL_MARGINS : UI_NORMAL_PANEL_MARGINS;
 
         walkControls(panel, function (control) {
-            if (control.ae2unityHideInCompact) {
+            if (control.ae2unityHideInCompact && !control.ae2unityCompactPageItem) {
                 setCompactCollapsed(control, compact);
             }
 
@@ -384,7 +446,7 @@
             }
 
             if (control.ae2unityLayoutKind) {
-                if (compact) {
+                if (compact && !control.ae2unityPreserveCompactWidth) {
                     control.alignment = ["fill", "center"];
                     control.minimumSize.width = 80;
                     control.preferredSize.width = compactWidth;
@@ -399,6 +461,134 @@
                 }
             }
         });
+
+        applyCompactPages(panel, compact);
+    }
+
+    function setCompactPages(panel, pages) {
+        var pager = panel.ae2unityCompactPager;
+        if (!pager) {
+            return;
+        }
+
+        pager.pages = pages || [];
+        for (var i = 0; i < pager.pages.length; i++) {
+            var controls = pager.pages[i].controls || [];
+            for (var j = 0; j < controls.length; j++) {
+                if (controls[j]) {
+                    controls[j].ae2unityCompactPageItem = true;
+                }
+            }
+        }
+    }
+
+    function applyCompactPages(panel, compact) {
+        var pager = panel.ae2unityCompactPager;
+        if (!pager) {
+            return;
+        }
+
+        var pages = pager.pages || [];
+        setCompactCollapsed(pager.group, !compact);
+        if (!compact) {
+            forEachCompactPageControl(pages, function (control) {
+                setCompactCollapsed(control, false);
+            });
+            return;
+        }
+
+        var pageCount = pages.length;
+        if (pageCount <= 0) {
+            return;
+        }
+
+        pager.pageIndex = clampInteger(pager.pageIndex, 0, pageCount - 1);
+        for (var i = 0; i < pages.length; i++) {
+            var controls = pages[i].controls || [];
+            for (var j = 0; j < controls.length; j++) {
+                setCompactCollapsed(controls[j], i !== pager.pageIndex);
+            }
+        }
+
+        try {
+            pager.pageText.text = (pager.pageIndex + 1) + "/" + pageCount + " " + pages[pager.pageIndex].title;
+        } catch (ignoredCompactPageLabel) {
+        }
+
+        try {
+            pager.prevButton.enabled = pager.pageIndex > 0;
+            pager.nextButton.enabled = pager.pageIndex < pageCount - 1;
+        } catch (ignoredCompactPageButtons) {
+        }
+
+        try {
+            pager.scrollbar.minvalue = 0;
+            pager.scrollbar.maxvalue = Math.max(0, pageCount - 1);
+            pager.scrollbar.stepdelta = 1;
+            pager.scrollbar.jumpdelta = 1;
+            pager.scrollbar.value = pager.pageIndex;
+            pager.scrollbar.enabled = pageCount > 1;
+        } catch (ignoredCompactPageScrollbar) {
+        }
+    }
+
+    function forEachCompactPageControl(pages, callback) {
+        var seen = [];
+        for (var i = 0; i < pages.length; i++) {
+            var controls = pages[i].controls || [];
+            for (var j = 0; j < controls.length; j++) {
+                var control = controls[j];
+                if (!control || containsControl(seen, control)) {
+                    continue;
+                }
+                seen.push(control);
+                callback(control);
+            }
+        }
+    }
+
+    function containsControl(controls, target) {
+        for (var i = 0; i < controls.length; i++) {
+            if (controls[i] === target) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function setCompactPage(panel, pageIndex) {
+        var pager = panel.ae2unityCompactPager;
+        if (!pager || !panel.ae2unityIsCompact) {
+            return false;
+        }
+
+        var pageCount = pager.pages ? pager.pages.length : 0;
+        if (pageCount <= 0) {
+            return false;
+        }
+
+        var nextIndex = clampInteger(pageIndex, 0, pageCount - 1);
+        if (nextIndex === pager.pageIndex) {
+            applyCompactPages(panel, true);
+            relayoutPanel(panel);
+            return false;
+        }
+
+        pager.pageIndex = nextIndex;
+        applyCompactPages(panel, true);
+        relayoutPanel(panel);
+        return true;
+    }
+
+    function advanceCompactPage(panel, direction) {
+        var pager = panel.ae2unityCompactPager;
+        if (!pager || !panel.ae2unityIsCompact) {
+            return false;
+        }
+
+        var step = direction < 0 ? -1 : 1;
+        return setCompactPage(panel, pager.pageIndex + step);
     }
 
     function setCompactCollapsed(control, collapsed) {
@@ -427,6 +617,11 @@
             }
         } catch (ignoredCollapseSize) {
         }
+    }
+
+    function clampInteger(value, minValue, maxValue) {
+        var numberValue = Math.round(Number(value) || 0);
+        return Math.max(minValue, Math.min(maxValue, numberValue));
     }
 
     function readSizeValue(size, index) {
@@ -486,9 +681,22 @@
             }
 
             activateCompactScroll(panel);
+            var direction = getWheelDirection(event);
+            if (direction === 0 || !advanceCompactPage(panel, direction)) {
+                return;
+            }
+
             try {
                 event.ae2unityScrollHandled = true;
             } catch (ignoredHandledFlag) {
+            }
+            try {
+                event.preventDefault();
+            } catch (ignoredPreventDefault) {
+            }
+            try {
+                event.stopPropagation();
+            } catch (ignoredStopPropagation) {
             }
         };
 
@@ -539,6 +747,24 @@
         }
 
         return false;
+    }
+
+    function getWheelDirection(event) {
+        if (!event) {
+            return 0;
+        }
+
+        if (typeof event.deltaY === "number" && event.deltaY !== 0) {
+            return event.deltaY > 0 ? 1 : -1;
+        }
+        if (typeof event.wheelDelta === "number" && event.wheelDelta !== 0) {
+            return event.wheelDelta < 0 ? 1 : -1;
+        }
+        if (typeof event.detail === "number" && event.detail !== 0) {
+            return event.detail > 0 ? 1 : -1;
+        }
+
+        return 0;
     }
 
     function getPanelWidth(panel) {
