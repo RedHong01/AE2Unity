@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.8
+
+- Fixed compact page controls disappearing after switching pages in narrow AE docked panels.
+- Restored compact visible controls with a valid maximum height so ScriptUI can reflow page content correctly.
+- Added compact page keyboard navigation with arrow keys and Page Up/Page Down.
+
 ## 0.2.7
 
 - Added a compact-panel `Full` button that opens a full standalone ae2unityshader window from a narrow AE docked sidebar.

@@ -25,6 +25,7 @@
     var UI_COMPACT_HORIZONTAL_MARGIN = 36;
     var UI_FULL_WINDOW_SIZE = [860, 560];
     var UI_COMPACT_WINDOW_SIZE = [340, 560];
+    var UI_MAX_VISIBLE_HEIGHT = 10000;
     var UI_NORMAL_PANEL_MARGINS = [16, 14, 16, 14];
     var UI_COMPACT_PANEL_MARGINS = [12, 10, 10, 10];
     var standaloneWindows = [];
@@ -200,14 +201,17 @@
         var runExportButton = panel.add("button", undefined, "Run Export");
         runExportButton.alignment = ["fill", "top"];
         runExportButton.preferredSize.height = 34;
+        runExportButton.ae2unityCompactVisibleHeight = 34;
         setHelpTip(runExportButton, "Run the selected export workflow.");
         var checkResultButton = panel.add("button", undefined, "Check Last Bridge Result");
         checkResultButton.alignment = ["fill", "top"];
         checkResultButton.preferredSize.height = 34;
+        checkResultButton.ae2unityCompactVisibleHeight = 34;
         setHelpTip(checkResultButton, "Read the latest Unity AEBridge result file.");
         var status = panel.add("statictext", undefined, "Ready");
         status.alignment = ["fill", "top"];
         status.preferredSize.height = 48;
+        status.ae2unityCompactVisibleHeight = 72;
         setHelpTip(status, "Shows export progress, warnings, and bridge results.");
 
         setCompactPages(panel, [
@@ -509,6 +513,7 @@
         if (height) {
             control.preferredSize.height = height;
             control.minimumSize.height = height;
+            control.ae2unityCompactVisibleHeight = height;
         }
         return control;
     }
@@ -745,12 +750,36 @@
                 control.preferredSize.height = 0;
                 control.maximumSize.height = 0;
             } else {
-                restoreHeight(control.minimumSize, control.ae2unityStoredVerticalSize.minimum);
-                restoreHeight(control.preferredSize, control.ae2unityStoredVerticalSize.preferred);
-                restoreHeight(control.maximumSize, control.ae2unityStoredVerticalSize.maximum);
+                var fallbackHeight = getCompactVisibleHeight(control);
+                restoreHeight(control.minimumSize, control.ae2unityStoredVerticalSize.minimum, 0, false);
+                restoreHeight(control.preferredSize, control.ae2unityStoredVerticalSize.preferred, fallbackHeight, false);
+                restoreHeight(control.maximumSize, control.ae2unityStoredVerticalSize.maximum, UI_MAX_VISIBLE_HEIGHT, true);
             }
         } catch (ignoredCollapseSize) {
         }
+    }
+
+    function getCompactVisibleHeight(control) {
+        if (!control) {
+            return 0;
+        }
+
+        try {
+            if (control.ae2unityCompactVisibleHeight && control.ae2unityCompactVisibleHeight > 0) {
+                return control.ae2unityCompactVisibleHeight;
+            }
+        } catch (ignoredCompactHeight) {
+        }
+
+        try {
+            var preferred = readSizeValue(control.preferredSize, 1);
+            if (preferred && preferred > 0) {
+                return preferred;
+            }
+        } catch (ignoredPreferredCompactHeight) {
+        }
+
+        return 0;
     }
 
     function clampInteger(value, minValue, maxValue) {
@@ -776,13 +805,17 @@
         return 0;
     }
 
-    function restoreHeight(size, value) {
+    function restoreHeight(size, value, fallback, isMaximumSize) {
         if (!size) {
             return;
         }
 
         if (value && value > 0) {
             size.height = value;
+        } else if (fallback && fallback > 0) {
+            size.height = fallback;
+        } else if (isMaximumSize) {
+            size.height = UI_MAX_VISIBLE_HEIGHT;
         } else {
             size.height = -1;
         }
@@ -806,6 +839,12 @@
         }
 
         var handler = function (event) {
+            var compactDirection = getCompactPageKeyDirection(event, panel);
+            if (compactDirection !== 0 && advanceCompactPage(panel, compactDirection)) {
+                consumeEvent(event);
+                return;
+            }
+
             if (!panel || !panel.ae2unityIsStandaloneWindow) {
                 return;
             }
@@ -832,6 +871,43 @@
         }
     }
 
+    function getCompactPageKeyDirection(event, panel) {
+        if (!event || !panel || !panel.ae2unityIsCompact || !eventLooksPlain(event)) {
+            return 0;
+        }
+
+        var keyName = readKeyName(event);
+        if (keyName === "UP" || keyName === "ARROWUP" || keyName === "LEFT" || keyName === "ARROWLEFT" || keyName === "PAGEUP" || keyName === "PGUP") {
+            return -1;
+        }
+        if (keyName === "DOWN" || keyName === "ARROWDOWN" || keyName === "RIGHT" || keyName === "ARROWRIGHT" || keyName === "PAGEDOWN" || keyName === "PGDN") {
+            return 1;
+        }
+
+        try {
+            if (event.keyCode === 38 || event.keyCode === 37 || event.keyCode === 33) {
+                return -1;
+            }
+            if (event.keyCode === 40 || event.keyCode === 39 || event.keyCode === 34) {
+                return 1;
+            }
+        } catch (ignoredCompactKeyCode) {
+        }
+
+        return 0;
+    }
+
+    function eventLooksPlain(event) {
+        try {
+            if (event.ctrlKey || event.metaKey || event.commandKey || event.altKey) {
+                return false;
+            }
+        } catch (ignoredPlainEventCheck) {
+        }
+
+        return true;
+    }
+
     function matchesShortcut(event, keyCharacter, keyCode) {
         if (!event) {
             return false;
@@ -854,14 +930,19 @@
         } catch (ignoredKeyCodeCheck) {
         }
 
-        var keyName = "";
-        try {
-            keyName = String(event.keyName || event.keyIdentifier || event.key || "").toUpperCase();
-        } catch (ignoredKeyNameRead) {
-            keyName = "";
-        }
+        var keyName = readKeyName(event);
 
         return keyName === keyCharacter || keyName === ("U+00" + keyCode.toString(16).toUpperCase());
+    }
+
+    function readKeyName(event) {
+        try {
+            return String(event.keyName || event.keyIdentifier || event.key || "")
+                .replace(/\s+/g, "")
+                .toUpperCase();
+        } catch (ignoredKeyNameRead) {
+            return "";
+        }
     }
 
     function consumeEvent(event) {
