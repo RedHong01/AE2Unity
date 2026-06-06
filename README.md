@@ -41,6 +41,14 @@ The AE panel reads Unity Hub's local `projects-v1.json` and `projectSortPreferen
 
 The panel can export either the current active composition or a specific composition from the project. Export modes include AEBridge metadata conversion, AEBridge plus Adobe Media Encoder video output, Media Encoder-only output, direct `.ae2shader` export into Unity Assets, and manual folder export.
 
+## After Effects Panel Docking
+
+Install `Tools/AfterEffects/AE2UnityShaderExport.jsx` into the After Effects `Scripts/ScriptUI Panels` folder, restart After Effects, then open it from `Window > AE2UnityShaderExport.jsx`.
+
+Panels opened from the `Window` menu can be dragged by their panel tab and docked into AE sidebars or saved workspaces. If you run the JSX through `File > Scripts > Run Script File...`, After Effects opens it as a standalone palette, which is useful for testing but cannot be docked into the workspace.
+
+The panel switches to a compact vertical layout when docked into a narrow sidebar.
+
 ## Supported MVP Surface
 
 - Composition metadata: width, height, frame rate, duration, color/bit-depth hints.

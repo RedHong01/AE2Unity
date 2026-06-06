@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Added dock-friendly responsive layout for the AE ScriptUI panel.
+- Reduced panel minimum width so it can dock into narrow After Effects sidebars.
+- Added documentation for opening the panel from `Window` so it can be docked into AE workspaces.
+
 ## 0.1.0
 
 - Added embedded Unity package scaffold.

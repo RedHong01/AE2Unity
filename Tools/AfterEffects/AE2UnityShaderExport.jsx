@@ -18,8 +18,10 @@
     var UI_SMALL_WIDTH = 96;
     var UI_MEDIUM_WIDTH = 190;
     var UI_FIELD_WIDTH = 480;
-    var UI_PANEL_MIN_WIDTH = 720;
-    var UI_PANEL_MIN_HEIGHT = 430;
+    var UI_PANEL_MIN_WIDTH = 300;
+    var UI_PANEL_MIN_HEIGHT = 360;
+    var UI_COMPACT_BREAKPOINT = 620;
+    var UI_COMPACT_HORIZONTAL_MARGIN = 48;
 
     function buildPanel(owner) {
         var panel = owner instanceof Panel
@@ -259,6 +261,9 @@
         panel.onResizing = panel.onResize = function () {
             relayoutPanel(this);
         };
+        panel.onShow = function () {
+            relayoutPanel(panel);
+        };
 
         relayoutPanel(panel);
         return panel;
@@ -271,12 +276,15 @@
         row.alignment = ["fill", "top"];
         row.spacing = 10;
         row.margins = 0;
+        row.ae2unityIsFormRow = true;
         setHelpTip(row, helpTip);
 
         var label = row.add("statictext", undefined, labelText);
         label.alignment = ["left", "center"];
         label.preferredSize.width = UI_LABEL_WIDTH;
         label.minimumSize.width = UI_LABEL_WIDTH;
+        label.ae2unityIsFormLabel = true;
+        label.ae2unityLabelText = labelText;
         setHelpTip(label, helpTip);
         return row;
     }
@@ -296,6 +304,9 @@
         control.alignment = ["left", "center"];
         control.preferredSize.width = width;
         control.minimumSize.width = width;
+        control.ae2unityLayoutKind = "fixed";
+        control.ae2unityPreferredWidth = width;
+        control.ae2unityMinimumWidth = width;
         if (height) {
             control.preferredSize.height = height;
             control.minimumSize.height = height;
@@ -307,14 +318,85 @@
         control.alignment = ["fill", "center"];
         control.preferredSize.width = preferredWidth;
         control.minimumSize.width = minimumWidth || 160;
+        control.ae2unityLayoutKind = "stretch";
+        control.ae2unityPreferredWidth = preferredWidth;
+        control.ae2unityMinimumWidth = minimumWidth || 160;
         return control;
     }
 
     function relayoutPanel(panel) {
         try {
+            applyResponsiveLayout(panel);
             panel.layout.layout(true);
             panel.layout.resize();
         } catch (ignoredLayoutError) {
+        }
+    }
+
+    function applyResponsiveLayout(panel) {
+        var width = getPanelWidth(panel);
+        var compact = width > 0 && width < UI_COMPACT_BREAKPOINT;
+        var compactWidth = Math.max(160, width - UI_COMPACT_HORIZONTAL_MARGIN);
+
+        walkControls(panel, function (control) {
+            if (control.ae2unityIsFormRow) {
+                control.orientation = compact ? "column" : "row";
+                control.alignChildren = compact ? ["fill", "top"] : ["left", "center"];
+                control.spacing = compact ? 4 : 10;
+            }
+
+            if (control.ae2unityIsFormLabel) {
+                var hasText = control.ae2unityLabelText !== "";
+                control.visible = hasText || !compact;
+                control.alignment = compact ? ["fill", "top"] : ["left", "center"];
+                control.minimumSize.width = compact ? 80 : UI_LABEL_WIDTH;
+                control.preferredSize.width = compact ? compactWidth : UI_LABEL_WIDTH;
+            }
+
+            if (control.ae2unityLayoutKind) {
+                if (compact) {
+                    control.alignment = ["fill", "center"];
+                    control.minimumSize.width = 80;
+                    control.preferredSize.width = compactWidth;
+                } else if (control.ae2unityLayoutKind === "fixed") {
+                    control.alignment = ["left", "center"];
+                    control.minimumSize.width = control.ae2unityMinimumWidth;
+                    control.preferredSize.width = control.ae2unityPreferredWidth;
+                } else {
+                    control.alignment = ["fill", "center"];
+                    control.minimumSize.width = control.ae2unityMinimumWidth;
+                    control.preferredSize.width = control.ae2unityPreferredWidth;
+                }
+            }
+        });
+    }
+
+    function getPanelWidth(panel) {
+        try {
+            if (panel.size && panel.size.length > 0 && panel.size[0] > 0) {
+                return panel.size[0];
+            }
+        } catch (ignoredSize) {
+        }
+
+        try {
+            if (panel.bounds) {
+                return panel.bounds[2] - panel.bounds[0];
+            }
+        } catch (ignoredBounds) {
+        }
+
+        return 820;
+    }
+
+    function walkControls(control, callback) {
+        callback(control);
+        if (!control.children) {
+            return;
+        }
+
+        for (var i = 0; i < control.children.length; i++) {
+            walkControls(control.children[i], callback);
         }
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "com.duocurtain.ae2unityshader",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "Duo Curtain AE2Unity Shader",
   "description": "Imports a constrained After Effects export format and generates Unity 6 compatible shader/material assets for 2D motion graphics.",
   "unity": "6000.0",
