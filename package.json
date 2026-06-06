@@ -1,0 +1,24 @@
+{
+  "name": "com.duocurtain.ae2unityshader",
+  "version": "0.1.0",
+  "displayName": "Duo Curtain AE2Unity Shader",
+  "description": "Imports a constrained After Effects export format and generates Unity 6 compatible shader/material assets for 2D motion graphics.",
+  "unity": "6000.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RedHong01/duo-curtain-ae2unityshader.git"
+  },
+  "author": {
+    "name": "Duo Curtain"
+  },
+  "dependencies": {
+    "com.unity.render-pipelines.universal": "17.0.0"
+  },
+  "samples": [
+    {
+      "displayName": "Basic Curtain Export",
+      "description": "A tiny .ae2shader sample for validating importer and shader generation.",
+      "path": "Samples~/BasicCurtain"
+    }
+  ]
+}

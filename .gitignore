@@ -1,0 +1,17 @@
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+
+# Unity/editor generated cache folders when testing this package locally.
+Library/
+Temp/
+Obj/
+Logs/
+UserSettings/
+.vs/
+.vscode/
+.idea/
+
+# AEBridge runtime queue data belongs in the consuming Unity project, not this package repo.
+.ae2unitybridge/
