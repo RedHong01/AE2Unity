@@ -47,7 +47,7 @@ Install `Tools/AfterEffects/ae2unityshader.jsx` into the After Effects `Scripts/
 
 Panels opened from the `Window` menu can be dragged by their panel tab and docked into AE sidebars or saved workspaces. If you run the JSX through `File > Scripts > Run Script File...`, After Effects opens it as a standalone palette, which is useful for testing but cannot be docked into the workspace.
 
-The panel switches to a compact vertical layout when docked into a narrow sidebar.
+The panel switches to a compact core layout when docked into a narrow sidebar. Compact mode keeps the Unity project, composition, export mode, run button, bridge result button, and status visible. Wider floating or docked layouts show the full set of path, media, refresh, reference frame, and generation options.
 
 ## Supported MVP Surface
 

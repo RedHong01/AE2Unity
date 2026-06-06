@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Changed the AE panel compact layout to show only core controls in narrow docked sidebars.
+- Full-width floating or wide docked layouts still show all export paths, media settings, refresh actions, and generation options.
+
 ## 0.2.0
 
 - Renamed the public tool, AE panel, documentation, shader/menu paths, and GitHub repository to `ae2unityshader`.

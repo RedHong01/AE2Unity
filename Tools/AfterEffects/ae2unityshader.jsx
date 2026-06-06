@@ -39,6 +39,7 @@
         var title = panel.add("statictext", undefined, "Export compositions directly into a Unity project");
         title.alignment = ["fill", "top"];
         title.preferredSize.height = 26;
+        compactHide(title);
         setHelpTip(title, "Export AE composition data, media, or both into a selected Unity project.");
 
         var projectGroup = createFormRow(panel, "Unity Project", "Select the Unity project that will receive exported assets.");
@@ -47,17 +48,21 @@
         setHelpTip(projectDropdown, "Choose a Unity Hub project to export into.");
         var refreshProjectsButton = projectGroup.add("button", undefined, "Refresh");
         fixedControl(refreshProjectsButton, UI_BUTTON_WIDTH);
+        compactHide(refreshProjectsButton);
         setHelpTip(refreshProjectsButton, "Reload the project list from Unity Hub.");
         var chooseProjectButton = projectGroup.add("button", undefined, "Choose");
         fixedControl(chooseProjectButton, UI_BUTTON_WIDTH);
+        compactHide(chooseProjectButton);
         setHelpTip(chooseProjectButton, "Manually choose a Unity project folder.");
 
         var pathGroup = createFormRow(panel, "Path", "Absolute folder path for the selected Unity project.");
+        compactHide(pathGroup);
         var projectPathText = pathGroup.add("edittext", undefined, loadSetting("UnityProjectPath", ""));
         stretchControl(projectPathText, UI_FIELD_WIDTH, 260);
         setHelpTip(projectPathText, "Absolute path to the Unity project root.");
 
         var exportPathGroup = createFormRow(panel, ".ae2shader Folder", "Unity Assets-relative folder for .ae2shader exports.");
+        compactHide(exportPathGroup);
         var relativePathText = exportPathGroup.add("edittext", undefined, loadSetting("UnityExportRelativePath", DEFAULT_UNITY_EXPORT_RELATIVE_PATH));
         stretchControl(relativePathText, UI_FIELD_WIDTH, 260);
         setHelpTip(relativePathText, "Assets-relative folder where Unity imports .ae2shader files.");
@@ -72,6 +77,7 @@
         setHelpTip(compDropdown, "Select the specific composition to export.");
         var refreshCompsButton = compGroup.add("button", undefined, "Refresh");
         fixedControl(refreshCompsButton, UI_BUTTON_WIDTH);
+        compactHide(refreshCompsButton);
         setHelpTip(refreshCompsButton, "Reload compositions from the current AE project.");
 
         var modeGroup = createFormRow(panel, "Export Mode", "Choose which AE-to-Unity workflow to run.");
@@ -87,11 +93,13 @@
         exportModeDropdown.selection = getExportModeSelection(loadSetting("ExportMode", "bridge"));
 
         var mediaFolderGroup = createFormRow(panel, "Media Folder", "Unity Assets-relative folder for rendered media.");
+        compactHide(mediaFolderGroup);
         var mediaPathText = mediaFolderGroup.add("edittext", undefined, loadSetting("MediaExportRelativePath", DEFAULT_MEDIA_EXPORT_RELATIVE_PATH));
         stretchControl(mediaPathText, UI_FIELD_WIDTH, 260);
         setHelpTip(mediaPathText, "Assets-relative folder where AME-rendered media will be saved.");
 
         var mediaOptionsGroup = createFormRow(panel, "Media", "Media Encoder output format and template controls.");
+        compactHide(mediaOptionsGroup);
         var mediaExtensionDropdown = mediaOptionsGroup.add("dropdownlist", undefined, ["mp4", "mov", "webm"]);
         fixedControl(mediaExtensionDropdown, UI_SMALL_WIDTH);
         setHelpTip(mediaExtensionDropdown, "Choose the output file extension for the rendered media.");
@@ -108,6 +116,7 @@
         startAmeCheckbox.value = loadSetting("StartMediaEncoder", "true") !== "false";
 
         var optionsGroup = createFormRow(panel, "", "Optional export behaviors.");
+        compactHide(optionsGroup);
         var referenceFramesCheckbox = optionsGroup.add("checkbox", undefined, "Reference frames");
         fixedControl(referenceFramesCheckbox, 170);
         setHelpTip(referenceFramesCheckbox, "Export PNG reference frames for visual comparison in Unity.");
@@ -301,6 +310,13 @@
         }
     }
 
+    function compactHide(control) {
+        if (control) {
+            control.ae2unityHideInCompact = true;
+        }
+        return control;
+    }
+
     function fixedControl(control, width, height) {
         control.alignment = ["left", "center"];
         control.preferredSize.width = width;
@@ -340,6 +356,10 @@
         var compactWidth = Math.max(160, width - UI_COMPACT_HORIZONTAL_MARGIN);
 
         walkControls(panel, function (control) {
+            if (control.ae2unityHideInCompact) {
+                control.visible = !compact;
+            }
+
             if (control.ae2unityIsFormRow) {
                 control.orientation = compact ? "column" : "row";
                 control.alignChildren = compact ? ["fill", "top"] : ["left", "center"];
