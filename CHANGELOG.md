@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.11
+
+- Added a compact header `Run` button that is always visible on the compact Export page.
+- Hid the full-width `Run Export` button in compact mode so the Export page no longer relies on vertical space below the core dropdowns.
+- Kept the original full-width `Run Export` button in normal/full layouts.
+
 ## 0.2.10
 
 - Rebuilt the compact Result page as a dedicated result group with fixed narrow-panel sizing.

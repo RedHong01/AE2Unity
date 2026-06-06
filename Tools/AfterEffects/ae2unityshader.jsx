@@ -96,6 +96,10 @@
         fixedControl(compactPageScrollbar, 44, 16);
         compactPageScrollbar.ae2unityPreserveCompactWidth = true;
         setHelpTip(compactPageScrollbar, "Drag to switch compact panel sections.");
+        var compactRunExportButton = compactPagerGroup.add("button", undefined, "Run");
+        fixedControl(compactRunExportButton, 46, 24);
+        compactRunExportButton.ae2unityPreserveCompactWidth = true;
+        setHelpTip(compactRunExportButton, "Run the selected export workflow from compact mode.");
         var compactNextButton = compactPagerGroup.add("button", undefined, "Down");
         fixedControl(compactNextButton, 50, 24);
         compactNextButton.ae2unityPreserveCompactWidth = true;
@@ -111,6 +115,7 @@
             nextButton: compactNextButton,
             pageText: compactPageText,
             scrollbar: compactPageScrollbar,
+            runButton: compactRunExportButton,
             fullButton: compactFullWindowButton,
             pageIndex: 0,
             pages: []
@@ -204,6 +209,7 @@
         runExportButton.alignment = ["fill", "top"];
         runExportButton.preferredSize.height = 34;
         runExportButton.ae2unityCompactVisibleHeight = 34;
+        compactHide(runExportButton);
         setHelpTip(runExportButton, "Run the selected export workflow.");
         var resultGroup = panel.add("group");
         resultGroup.orientation = "column";
@@ -232,7 +238,7 @@
         setCompactPages(panel, [
             {
                 title: "Export",
-                controls: [projectGroup, compGroup, modeGroup, runExportButton]
+                controls: [projectGroup, compGroup, modeGroup]
             },
             {
                 title: "Result",
@@ -348,7 +354,7 @@
             saveSetting("GenerateShaderAndMaterial", generateShaderCheckbox.value ? "true" : "false");
         };
 
-        runExportButton.onClick = function () {
+        function runExportAction() {
             try {
                 showStatusResult(panel, status, "Running export...");
                 var exportResult = runConfiguredExport({
@@ -368,7 +374,10 @@
                 showStatusResult(panel, status, "Export failed: " + error.toString());
                 alert(status.text);
             }
-        };
+        }
+
+        runExportButton.onClick = runExportAction;
+        compactRunExportButton.onClick = runExportAction;
 
         checkResultButton.onClick = function () {
             try {
@@ -695,6 +704,11 @@
             pager.prevButton.enabled = pager.pageIndex > 0;
             pager.nextButton.enabled = pager.pageIndex < pageCount - 1;
         } catch (ignoredCompactPageButtons) {
+        }
+
+        try {
+            setCompactCollapsed(pager.runButton, pages[pager.pageIndex].title !== "Export");
+        } catch (ignoredCompactRunButton) {
         }
 
         try {
