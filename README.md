@@ -1,8 +1,26 @@
 # ae2unityshader
 
-This package is an early automation scaffold for converting constrained After Effects 2026 compositions into Unity 6 shader/material assets.
+## English
 
-## Install From Git
+`ae2unityshader` is an early automation scaffold for moving constrained Adobe After Effects 2026 compositions into Unity 6 as shader/material assets.
+
+The current workflow combines two sides:
+
+- An After Effects ScriptUI panel that exports composition metadata, optional reference frames, optional Media Encoder output, and bridge jobs.
+- A Unity package that receives `.ae2shader` payloads, imports them into the project, and generates Unity shader/material assets.
+
+This is not a full one-click replacement for every After Effects feature yet. The package is designed to make supported AE motion graphics reproducible inside Unity, while clearly warning when a comp uses features that should be baked, exported as media, or handled by future compiler passes.
+
+### Requirements
+
+- Adobe After Effects 2026.
+- Unity 6.
+- macOS or Windows.
+- Optional: Adobe Media Encoder when using media export modes.
+
+The package uses C# editor/runtime code, ShaderLab/HLSL, and ExtendScript (`.jsx`). It does not require native DLLs.
+
+### Install From Git
 
 In Unity 6, install this package from the Package Manager:
 
@@ -21,35 +39,47 @@ You can also add it directly to `Packages/manifest.json`:
 "com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git"
 ```
 
-To update later, pull the repo and use Package Manager's update/re-resolve flow, or point the dependency at a tag/branch/commit.
+To pin a release, use a tag:
 
-The AEBridge pipeline is:
+```json
+"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.2"
+```
 
-1. Run `Tools/AfterEffects/ae2unityshader.jsx` in After Effects.
-2. Select a Unity project from the Unity Hub project dropdown in the AE panel.
-3. Choose the active composition or a specific composition.
-4. Choose an export mode, such as `AEBridge: .ae2shader -> Unity shader/material`.
-5. Click `Run Export`.
-6. The AE panel writes a bridge job into `.ae2unitybridge/inbox`.
-7. Unity's AEBridge receiver imports the payload into `Assets/ae2unityshader/Exports/<CompName>.ae2shader`.
-8. Unity generates `<CompName>.generated.shader` plus `<CompName>.generated.mat`.
-9. Unity writes the result to `.ae2unitybridge/outbox`, which the AE panel can read with `Check Last Bridge Result`.
+If the repository is private, Unity must have GitHub access through your local Git credentials.
+
+### AEBridge Workflow
+
+1. Install `Tools/AfterEffects/ae2unityshader.jsx` into the After Effects `Scripts/ScriptUI Panels` folder.
+2. Restart After Effects.
+3. Open `Window > ae2unityshader.jsx`.
+4. Select a Unity project from the Unity Hub project dropdown.
+5. Choose the active composition or a specific composition.
+6. Choose an export mode, such as `AEBridge: .ae2shader -> Unity shader/material`.
+7. Click `Run Export`.
+8. The AE panel writes a bridge job into `.ae2unitybridge/inbox`.
+9. Unity's AEBridge receiver imports the payload into `Assets/ae2unityshader/Exports/<CompName>.ae2shader`.
+10. Unity generates `<CompName>.generated.shader` and `<CompName>.generated.mat`.
+11. Unity writes the result to `.ae2unitybridge/outbox`, which the AE panel can read with `Check Last Bridge Result`.
 
 Direct export and manual generation are still available through `Direct .ae2shader into Unity Assets`, `Manual folder .ae2shader export`, and `Assets > ae2unityshader > Generate Shader From AE2Shader`.
 
-The AE panel reads Unity Hub's local `projects-v1.json` and `projectSortPreferences.json` so the project dropdown follows the same project names and sorting preference used by Unity Hub. `Choose` remains available as a fallback for projects that are not listed in Unity Hub.
+### After Effects Panel
 
-The panel can export either the current active composition or a specific composition from the project. Export modes include AEBridge metadata conversion, AEBridge plus Adobe Media Encoder video output, Media Encoder-only output, direct `.ae2shader` export into Unity Assets, and manual folder export.
-
-## After Effects Panel Docking
-
-Install `Tools/AfterEffects/ae2unityshader.jsx` into the After Effects `Scripts/ScriptUI Panels` folder, restart After Effects, then open it from `Window > ae2unityshader.jsx`.
+The AE panel reads Unity Hub's local `projects-v1.json` and `projectSortPreferences.json`, so the Unity project dropdown follows the same project names and sorting preference used by Unity Hub. `Choose` remains available as a fallback for projects that are not listed in Unity Hub.
 
 Panels opened from the `Window` menu can be dragged by their panel tab and docked into AE sidebars or saved workspaces. If you run the JSX through `File > Scripts > Run Script File...`, After Effects opens it as a standalone palette, which is useful for testing but cannot be docked into the workspace.
 
 The panel switches to a compact core layout when docked into a narrow sidebar. Compact mode keeps the Unity project, composition, export mode, run button, bridge result button, and status visible. If the compact panel is shorter than its content, use the mouse wheel or the right-side scrollbar to browse it. Wider floating or docked layouts show the full set of path, media, refresh, reference frame, and generation options.
 
-## Supported MVP Surface
+### Export Modes
+
+- `AEBridge: .ae2shader -> Unity shader/material`: sends composition metadata to Unity and asks Unity to generate shader/material assets.
+- `AEBridge + Media Encoder`: sends metadata and can also queue a video/media export.
+- `Media Encoder only`: exports media without generating Unity shader/material assets.
+- `Direct .ae2shader into Unity Assets`: writes an `.ae2shader` file directly into the selected Unity project's `Assets` folder.
+- `Manual folder .ae2shader export`: writes an `.ae2shader` file to a user-selected folder.
+
+### Supported MVP Surface
 
 - Composition metadata: width, height, frame rate, duration, color/bit-depth hints.
 - Layers: name, index, type, enabled flag, in/out points, blend mode, track matte hint.
@@ -58,15 +88,11 @@ The panel switches to a compact core layout when docked into a narrow sidebar. C
 - Basic effect/mask metadata for capability analysis.
 - Unity material preview through `ae2unityshader/Composite Unlit`.
 
-## Known Fallbacks
+### Known Fallbacks
 
 The importer marks complex features as warnings rather than silently pretending they are shader-identical. Third-party effects, 3D layers, cameras, lights, complex text animation, particles, and unsupported expressions should be baked or handled by later compiler passes.
 
-## Cross-Platform Notes
-
-The package uses only C# editor/runtime code and ShaderLab/HLSL, with no native DLLs. The AE exporter is ExtendScript (`.jsx`) and is intended to run on both Windows and macOS in After Effects 2026.
-
-## Unity Settings
+### Unity Settings
 
 Open `Project Settings > ae2unityshader`.
 
@@ -76,3 +102,106 @@ Open `Project Settings > ae2unityshader`.
 - `Bridge Output Path`: default Unity asset folder for bridge imports.
 
 Bridge utilities are also available in `Tools > ae2unityshader`.
+
+## 中文
+
+`ae2unityshader` 是一个早期自动化工具框架，用来把受控范围内的 Adobe After Effects 2026 合成转换到 Unity 6 中，并生成 shader/material 资产。
+
+目前这套工作流由两部分组成：
+
+- After Effects 侧的 ScriptUI 面板，负责导出合成 metadata、可选参考帧、可选 Media Encoder 输出，以及 AEBridge 任务。
+- Unity 侧的 package，负责接收 `.ae2shader` payload，将它导入 Unity 项目，并生成 shader/material 资产。
+
+它目前还不是“所有 AE 功能都能一键完整复刻”的最终编译器。它的目标是让支持范围内的 AE motion graphics 可以在 Unity 中复现，同时在遇到复杂功能时明确给出 warning，提示哪些内容需要 bake、导出为媒体文件，或者等待后续 compiler pass 支持。
+
+### 环境需求
+
+- Adobe After Effects 2026。
+- Unity 6。
+- macOS 或 Windows。
+- 可选：当使用媒体导出模式时，需要 Adobe Media Encoder。
+
+这个 package 使用 C# editor/runtime 代码、ShaderLab/HLSL 和 ExtendScript (`.jsx`)。它不依赖 native DLL。
+
+### 通过 Git 安装
+
+在 Unity 6 中，通过 Package Manager 安装：
+
+1. 打开 `Window > Package Manager`。
+2. 点击 `+`。
+3. 选择 `Install package from git URL...`。
+4. 输入：
+
+```text
+https://github.com/RedHong01/ae2unityshader.git
+```
+
+你也可以直接写入 `Packages/manifest.json`：
+
+```json
+"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git"
+```
+
+如果希望锁定某个 release，可以使用 tag：
+
+```json
+"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.2"
+```
+
+如果 repo 是 private，Unity 需要能够通过你本地的 Git 凭据访问 GitHub。
+
+### AEBridge 工作流程
+
+1. 把 `Tools/AfterEffects/ae2unityshader.jsx` 安装到 After Effects 的 `Scripts/ScriptUI Panels` 文件夹。
+2. 重启 After Effects。
+3. 从 `Window > ae2unityshader.jsx` 打开面板。
+4. 在 AE 面板中从 Unity Hub 项目列表选择 Unity project。
+5. 选择当前正在编辑的 composition，或指定某一个 composition。
+6. 选择导出模式，例如 `AEBridge: .ae2shader -> Unity shader/material`。
+7. 点击 `Run Export`。
+8. AE 面板会把 bridge job 写入 `.ae2unitybridge/inbox`。
+9. Unity 侧 AEBridge receiver 会把 payload 导入到 `Assets/ae2unityshader/Exports/<CompName>.ae2shader`。
+10. Unity 生成 `<CompName>.generated.shader` 和 `<CompName>.generated.mat`。
+11. Unity 把结果写入 `.ae2unitybridge/outbox`，AE 面板可以通过 `Check Last Bridge Result` 读取结果。
+
+你也仍然可以使用直接导出和手动生成流程：`Direct .ae2shader into Unity Assets`、`Manual folder .ae2shader export`，以及 Unity 中的 `Assets > ae2unityshader > Generate Shader From AE2Shader`。
+
+### After Effects 面板
+
+AE 面板会读取 Unity Hub 本地的 `projects-v1.json` 和 `projectSortPreferences.json`，所以 Unity Project 下拉列表会尽量沿用 Unity Hub 中的项目名称和排序。`Choose` 按钮仍然保留，用来选择没有出现在 Unity Hub 列表中的项目。
+
+从 `Window` 菜单打开的面板可以拖拽 tab，并吸附到 AE 的侧边栏或保存进 workspace。如果通过 `File > Scripts > Run Script File...` 运行 JSX，AE 会把它作为独立 palette 打开，这适合测试，但不能吸附到 AE workspace 中。
+
+当面板被吸附到较窄侧边栏时，会切换到紧凑核心布局。紧凑模式会保留 Unity project、composition、export mode、run button、bridge result button 和 status。若紧凑面板高度不足，可以用鼠标滚轮或右侧 scrollbar 上下浏览。较宽的浮窗或停靠布局会显示完整的 path、media、refresh、reference frame 和 generation 选项。
+
+### 导出模式
+
+- `AEBridge: .ae2shader -> Unity shader/material`：发送 composition metadata 到 Unity，并让 Unity 生成 shader/material 资产。
+- `AEBridge + Media Encoder`：发送 metadata，同时可选地排队视频/媒体导出。
+- `Media Encoder only`：只导出媒体文件，不生成 Unity shader/material。
+- `Direct .ae2shader into Unity Assets`：把 `.ae2shader` 直接写入所选 Unity 项目的 `Assets` 文件夹。
+- `Manual folder .ae2shader export`：把 `.ae2shader` 写入用户手动选择的文件夹。
+
+### 当前 MVP 支持范围
+
+- Composition metadata：宽度、高度、帧率、时长、色彩/bit-depth 提示。
+- Layers：名称、index、类型、enabled 状态、in/out points、blend mode、track matte hint。
+- Transform keyframes：anchor、position、scale、rotation、opacity。
+- Source footage 路径引用。
+- 用于 capability analysis 的基础 effect/mask metadata。
+- 通过 `ae2unityshader/Composite Unlit` 进行 Unity material preview。
+
+### 已知 fallback
+
+Importer 会把复杂功能标记为 warning，而不是假装它们已经被 shader 完全等价还原。第三方 effects、3D layers、cameras、lights、复杂 text animation、particles，以及不支持的 expressions，建议先 bake、导出为媒体，或者等待后续 compiler pass 支持。
+
+### Unity 设置
+
+打开 `Project Settings > ae2unityshader`。
+
+- `Auto Generate On Import`：启用后，Unity 每次导入 `.ae2shader` 都会自动生成 shader/material。
+- `Overwrite Generated Assets`：启用后，重复导出会更新同名 `.generated.shader` 和 `.generated.mat`。
+- `AEBridge Receiver Enabled`：启用后，Unity 会轮询 `.ae2unitybridge/inbox` 中的 AE jobs。
+- `Bridge Output Path`：bridge import 的默认 Unity asset 文件夹。
+
+Bridge 工具也可以从 `Tools > ae2unityshader` 使用。
