@@ -23,6 +23,7 @@
     var UI_PANEL_MIN_HEIGHT = 360;
     var UI_COMPACT_BREAKPOINT = 620;
     var UI_COMPACT_HORIZONTAL_MARGIN = 48;
+    var UI_COMPACT_SCROLL_STEP = 48;
 
     function buildPanel(owner) {
         var panel = owner instanceof Panel
@@ -36,13 +37,48 @@
         panel.minimumSize = [UI_PANEL_MIN_WIDTH, UI_PANEL_MIN_HEIGHT];
         panel.preferredSize = [820, 500];
 
-        var title = panel.add("statictext", undefined, "Export compositions directly into a Unity project");
+        var scrollRoot = panel.add("group");
+        scrollRoot.orientation = "row";
+        scrollRoot.alignChildren = ["fill", "fill"];
+        scrollRoot.alignment = ["fill", "fill"];
+        scrollRoot.spacing = 6;
+        scrollRoot.margins = 0;
+
+        var content = scrollRoot.add("group");
+        content.orientation = "column";
+        content.alignChildren = ["fill", "top"];
+        content.alignment = ["fill", "top"];
+        content.spacing = panel.spacing;
+        content.margins = 0;
+
+        var compactScrollBar = scrollRoot.add("scrollbar", undefined, 0, 0, 0);
+        compactScrollBar.alignment = ["right", "fill"];
+        compactScrollBar.preferredSize.width = 14;
+        compactScrollBar.minimumSize.width = 14;
+        compactScrollBar.maximumSize.width = 14;
+        compactScrollBar.visible = false;
+        setHelpTip(compactScrollBar, "Scroll the compact panel.");
+
+        panel.ae2unityScroll = {
+            root: scrollRoot,
+            content: content,
+            bar: compactScrollBar,
+            value: 0,
+            max: 0,
+            compact: false
+        };
+
+        compactScrollBar.onChanging = compactScrollBar.onChange = function () {
+            setCompactScroll(panel, compactScrollBar.value);
+        };
+
+        var title = content.add("statictext", undefined, "Export compositions directly into a Unity project");
         title.alignment = ["fill", "top"];
         title.preferredSize.height = 26;
         compactHide(title);
         setHelpTip(title, "Export AE composition data, media, or both into a selected Unity project.");
 
-        var projectGroup = createFormRow(panel, "Unity Project", "Select the Unity project that will receive exported assets.");
+        var projectGroup = createFormRow(content, "Unity Project", "Select the Unity project that will receive exported assets.");
         var projectDropdown = projectGroup.add("dropdownlist", undefined, []);
         stretchControl(projectDropdown, 320, 220);
         setHelpTip(projectDropdown, "Choose a Unity Hub project to export into.");
@@ -55,19 +91,19 @@
         compactHide(chooseProjectButton);
         setHelpTip(chooseProjectButton, "Manually choose a Unity project folder.");
 
-        var pathGroup = createFormRow(panel, "Path", "Absolute folder path for the selected Unity project.");
+        var pathGroup = createFormRow(content, "Path", "Absolute folder path for the selected Unity project.");
         compactHide(pathGroup);
         var projectPathText = pathGroup.add("edittext", undefined, loadSetting("UnityProjectPath", ""));
         stretchControl(projectPathText, UI_FIELD_WIDTH, 260);
         setHelpTip(projectPathText, "Absolute path to the Unity project root.");
 
-        var exportPathGroup = createFormRow(panel, ".ae2shader Folder", "Unity Assets-relative folder for .ae2shader exports.");
+        var exportPathGroup = createFormRow(content, ".ae2shader Folder", "Unity Assets-relative folder for .ae2shader exports.");
         compactHide(exportPathGroup);
         var relativePathText = exportPathGroup.add("edittext", undefined, loadSetting("UnityExportRelativePath", DEFAULT_UNITY_EXPORT_RELATIVE_PATH));
         stretchControl(relativePathText, UI_FIELD_WIDTH, 260);
         setHelpTip(relativePathText, "Assets-relative folder where Unity imports .ae2shader files.");
 
-        var compGroup = createFormRow(panel, "Composition", "Choose the AE composition source for this export.");
+        var compGroup = createFormRow(content, "Composition", "Choose the AE composition source for this export.");
         var compSourceDropdown = compGroup.add("dropdownlist", undefined, ["Current Active Comp", "Specific Comp"]);
         fixedControl(compSourceDropdown, UI_MEDIUM_WIDTH);
         setHelpTip(compSourceDropdown, "Use the active comp or choose a specific comp from the project.");
@@ -80,7 +116,7 @@
         compactHide(refreshCompsButton);
         setHelpTip(refreshCompsButton, "Reload compositions from the current AE project.");
 
-        var modeGroup = createFormRow(panel, "Export Mode", "Choose which AE-to-Unity workflow to run.");
+        var modeGroup = createFormRow(content, "Export Mode", "Choose which AE-to-Unity workflow to run.");
         var exportModeDropdown = modeGroup.add("dropdownlist", undefined, [
             "AEBridge: .ae2shader -> Unity shader/material",
             "AEBridge + Media Encoder video",
@@ -92,13 +128,13 @@
         setHelpTip(exportModeDropdown, "Send metadata to Unity, render media, or save files manually.");
         exportModeDropdown.selection = getExportModeSelection(loadSetting("ExportMode", "bridge"));
 
-        var mediaFolderGroup = createFormRow(panel, "Media Folder", "Unity Assets-relative folder for rendered media.");
+        var mediaFolderGroup = createFormRow(content, "Media Folder", "Unity Assets-relative folder for rendered media.");
         compactHide(mediaFolderGroup);
         var mediaPathText = mediaFolderGroup.add("edittext", undefined, loadSetting("MediaExportRelativePath", DEFAULT_MEDIA_EXPORT_RELATIVE_PATH));
         stretchControl(mediaPathText, UI_FIELD_WIDTH, 260);
         setHelpTip(mediaPathText, "Assets-relative folder where AME-rendered media will be saved.");
 
-        var mediaOptionsGroup = createFormRow(panel, "Media", "Media Encoder output format and template controls.");
+        var mediaOptionsGroup = createFormRow(content, "Media", "Media Encoder output format and template controls.");
         compactHide(mediaOptionsGroup);
         var mediaExtensionDropdown = mediaOptionsGroup.add("dropdownlist", undefined, ["mp4", "mov", "webm"]);
         fixedControl(mediaExtensionDropdown, UI_SMALL_WIDTH);
@@ -115,7 +151,7 @@
         setHelpTip(startAmeCheckbox, "Start Adobe Media Encoder after adding the render queue item.");
         startAmeCheckbox.value = loadSetting("StartMediaEncoder", "true") !== "false";
 
-        var optionsGroup = createFormRow(panel, "", "Optional export behaviors.");
+        var optionsGroup = createFormRow(content, "", "Optional export behaviors.");
         compactHide(optionsGroup);
         var referenceFramesCheckbox = optionsGroup.add("checkbox", undefined, "Reference frames");
         fixedControl(referenceFramesCheckbox, 170);
@@ -126,15 +162,15 @@
         setHelpTip(generateShaderCheckbox, "Ask Unity to generate shader and material after import.");
         generateShaderCheckbox.value = loadSetting("GenerateShaderAndMaterial", "true") !== "false";
 
-        var runExportButton = panel.add("button", undefined, "Run Export");
+        var runExportButton = content.add("button", undefined, "Run Export");
         runExportButton.alignment = ["fill", "top"];
         runExportButton.preferredSize.height = 34;
         setHelpTip(runExportButton, "Run the selected export workflow.");
-        var checkResultButton = panel.add("button", undefined, "Check Last Bridge Result");
+        var checkResultButton = content.add("button", undefined, "Check Last Bridge Result");
         checkResultButton.alignment = ["fill", "top"];
         checkResultButton.preferredSize.height = 34;
         setHelpTip(checkResultButton, "Read the latest Unity AEBridge result file.");
-        var status = panel.add("statictext", undefined, "Ready");
+        var status = content.add("statictext", undefined, "Ready");
         status.alignment = ["fill", "top"];
         status.preferredSize.height = 48;
         setHelpTip(status, "Shows export progress, warnings, and bridge results.");
@@ -275,6 +311,7 @@
             relayoutPanel(panel);
         };
 
+        bindCompactMouseWheelTree(panel, panel);
         relayoutPanel(panel);
         return panel;
     }
@@ -346,6 +383,7 @@
             applyResponsiveLayout(panel);
             panel.layout.layout(true);
             panel.layout.resize();
+            updateCompactScroll(panel);
         } catch (ignoredLayoutError) {
         }
     }
@@ -390,6 +428,189 @@
                 }
             }
         });
+    }
+
+    function updateCompactScroll(panel) {
+        var scroll = panel.ae2unityScroll;
+        if (!scroll || !scroll.root || !scroll.content || !scroll.bar) {
+            return;
+        }
+
+        var width = getPanelWidth(panel);
+        var compact = width > 0 && width < UI_COMPACT_BREAKPOINT;
+        scroll.compact = compact;
+
+        if (!compact) {
+            scroll.value = 0;
+            scroll.max = 0;
+            scroll.bar.visible = false;
+            setCompactScroll(panel, 0);
+            return;
+        }
+
+        var viewportHeight = getControlHeight(scroll.root);
+        var contentHeight = getVisibleContentHeight(scroll.content);
+        var maxScroll = Math.max(0, contentHeight - viewportHeight + 4);
+
+        scroll.max = maxScroll;
+        scroll.bar.visible = maxScroll > 0;
+        scroll.bar.enabled = maxScroll > 0;
+        try {
+            scroll.bar.minvalue = 0;
+            scroll.bar.maxvalue = maxScroll;
+            scroll.bar.stepdelta = UI_COMPACT_SCROLL_STEP;
+            scroll.bar.jumpdelta = Math.max(UI_COMPACT_SCROLL_STEP, viewportHeight - UI_COMPACT_SCROLL_STEP);
+        } catch (ignoredScrollBarConfig) {
+        }
+
+        setCompactScroll(panel, scroll.value);
+    }
+
+    function setCompactScroll(panel, value) {
+        var scroll = panel.ae2unityScroll;
+        if (!scroll || !scroll.content) {
+            return;
+        }
+
+        var maxScroll = scroll.max || 0;
+        var nextValue = clampNumber(Number(value) || 0, 0, maxScroll);
+        scroll.value = nextValue;
+
+        try {
+            if (scroll.bar) {
+                scroll.bar.value = nextValue;
+            }
+        } catch (ignoredScrollBarValue) {
+        }
+
+        try {
+            scroll.content.location = [scroll.content.location[0], -Math.round(nextValue)];
+        } catch (ignoredContentMove) {
+        }
+    }
+
+    function scrollCompactBy(panel, direction) {
+        var scroll = panel.ae2unityScroll;
+        if (!scroll || !scroll.compact || scroll.max <= 0) {
+            return false;
+        }
+
+        setCompactScroll(panel, scroll.value + direction * UI_COMPACT_SCROLL_STEP);
+        return true;
+    }
+
+    function bindCompactMouseWheelTree(control, panel) {
+        walkControls(control, function (child) {
+            bindCompactMouseWheel(child, panel);
+        });
+    }
+
+    function bindCompactMouseWheel(control, panel) {
+        if (!control || !control.addEventListener) {
+            return;
+        }
+
+        var handler = function (event) {
+            if (event && event.ae2unityScrollHandled) {
+                return;
+            }
+
+            var direction = getWheelDirection(event);
+            if (direction === 0 || !scrollCompactBy(panel, direction)) {
+                return;
+            }
+
+            try {
+                event.ae2unityScrollHandled = true;
+            } catch (ignoredHandledFlag) {
+            }
+            try {
+                event.preventDefault();
+            } catch (ignoredPreventDefault) {
+            }
+            try {
+                event.stopPropagation();
+            } catch (ignoredStopPropagation) {
+            }
+        };
+
+        var events = ["mousewheel", "wheel", "scroll", "Scroll"];
+        for (var i = 0; i < events.length; i++) {
+            try {
+                control.addEventListener(events[i], handler);
+            } catch (ignoredWheelBind) {
+            }
+        }
+
+        try {
+            control.onMouseWheel = handler;
+        } catch (ignoredOnMouseWheel) {
+        }
+    }
+
+    function getWheelDirection(event) {
+        if (!event) {
+            return 0;
+        }
+
+        if (typeof event.deltaY === "number" && event.deltaY !== 0) {
+            return event.deltaY > 0 ? 1 : -1;
+        }
+        if (typeof event.wheelDelta === "number" && event.wheelDelta !== 0) {
+            return event.wheelDelta < 0 ? 1 : -1;
+        }
+        if (typeof event.detail === "number" && event.detail !== 0) {
+            return event.detail > 0 ? 1 : -1;
+        }
+
+        return 0;
+    }
+
+    function getVisibleContentHeight(content) {
+        var maxBottom = 0;
+        if (!content || !content.children) {
+            return 0;
+        }
+
+        for (var i = 0; i < content.children.length; i++) {
+            var child = content.children[i];
+            if (!child.visible) {
+                continue;
+            }
+
+            try {
+                var bounds = child.bounds;
+                var bottom = bounds[1] + getControlHeight(child);
+                if (bottom > maxBottom) {
+                    maxBottom = bottom;
+                }
+            } catch (ignoredChildBounds) {
+            }
+        }
+
+        return maxBottom;
+    }
+
+    function getControlHeight(control) {
+        try {
+            if (control.size && control.size.length > 1 && control.size[1] > 0) {
+                return control.size[1];
+            }
+        } catch (ignoredSizeHeight) {
+        }
+
+        try {
+            if (control.bounds) {
+                return control.bounds[3] - control.bounds[1];
+            }
+        } catch (ignoredBoundsHeight) {
+        }
+
+        return 0;
+    }
+
+    function clampNumber(value, minValue, maxValue) {
+        return Math.max(minValue, Math.min(maxValue, value));
     }
 
     function getPanelWidth(panel) {

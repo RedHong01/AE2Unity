@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2
+
+- Added compact-mode scrolling for narrow AE docked panels.
+- Added a native vertical scrollbar and best-effort mouse wheel event handling for compact panel browsing.
+
 ## 0.2.1
 
 - Changed the AE panel compact layout to show only core controls in narrow docked sidebars.
