@@ -1,6 +1,6 @@
 {
   "name": "com.redhong01.ae2unityshader",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "displayName": "ae2unityshader",
   "description": "Imports a constrained After Effects export format and generates Unity 6 compatible shader/material assets for 2D motion graphics.",
   "unity": "6000.0",

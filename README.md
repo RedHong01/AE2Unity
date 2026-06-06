@@ -42,7 +42,7 @@ You can also add it directly to `Packages/manifest.json`:
 To pin a release, use a tag:
 
 ```json
-"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.3"
+"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.4"
 ```
 
 If the repository is private, Unity must have GitHub access through your local Git credentials.
@@ -69,7 +69,7 @@ The AE panel reads Unity Hub's local `projects-v1.json` and `projectSortPreferen
 
 Panels opened from the `Window` menu can be dragged by their panel tab and docked into AE sidebars or saved workspaces. If you run the JSX through `File > Scripts > Run Script File...`, After Effects opens it as a standalone palette, which is useful for testing but cannot be docked into the workspace.
 
-The panel switches to a compact core layout when docked into a narrow sidebar. Compact mode keeps the Unity project, composition, export mode, run button, bridge result button, and status visible. If the compact panel is shorter than its content, use the mouse wheel or the right-side scrollbar to browse it. Wider floating or docked layouts show the full set of path, media, refresh, reference frame, and generation options.
+The panel switches to a compact core layout when docked into a narrow sidebar. Compact mode keeps the Unity project, composition, export mode, run button, bridge result button, and status visible. If the compact panel is shorter than its content, use AE's native docked-panel scrolling area to browse it. Wider floating or docked layouts show the full set of path, media, refresh, reference frame, and generation options.
 
 ### Export Modes
 
@@ -145,7 +145,7 @@ https://github.com/RedHong01/ae2unityshader.git
 如果希望锁定某个 release，可以使用 tag：
 
 ```json
-"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.3"
+"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.4"
 ```
 
 如果 repo 是 private，Unity 需要能够通过你本地的 Git 凭据访问 GitHub。
@@ -172,7 +172,7 @@ AE 面板会读取 Unity Hub 本地的 `projects-v1.json` 和 `projectSortPrefer
 
 从 `Window` 菜单打开的面板可以拖拽 tab，并吸附到 AE 的侧边栏或保存进 workspace。如果通过 `File > Scripts > Run Script File...` 运行 JSX，AE 会把它作为独立 palette 打开，这适合测试，但不能吸附到 AE workspace 中。
 
-当面板被吸附到较窄侧边栏时，会切换到紧凑核心布局。紧凑模式会保留 Unity project、composition、export mode、run button、bridge result button 和 status。若紧凑面板高度不足，可以用鼠标滚轮或右侧 scrollbar 上下浏览。较宽的浮窗或停靠布局会显示完整的 path、media、refresh、reference frame 和 generation 选项。
+当面板被吸附到较窄侧边栏时，会切换到紧凑核心布局。紧凑模式会保留 Unity project、composition、export mode、run button、bridge result button 和 status。若紧凑面板高度不足，可以使用 AE 原生 docked panel 区域的滚动来浏览。较宽的浮窗或停靠布局会显示完整的 path、media、refresh、reference frame 和 generation 选项。
 
 ### 导出模式
 

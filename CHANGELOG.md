@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.4
+
+- Restored compact AE panel controls to the native ScriptUI panel layout so core fields are not clipped in docked sidebars.
+- Collapsed hidden compact-only rows to zero height so hidden path/media controls no longer push core controls out of view.
+- Removed the custom compact scrollbar implementation and let AE's native docked panel scroll area handle overflow.
+
 ## 0.2.3
 
 - Reworked compact AE panel scrolling so scrollbar range uses a guarded viewport height and avoids blank overscroll.
