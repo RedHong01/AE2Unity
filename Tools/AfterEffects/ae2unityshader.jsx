@@ -335,7 +335,8 @@
 
         runExportButton.onClick = function () {
             try {
-                status.text = runConfiguredExport({
+                showStatusResult(panel, status, "Running export...");
+                var exportResult = runConfiguredExport({
                     comp: getSelectedComposition(compSourceDropdown, compDropdown),
                     exportMode: getExportModeValue(exportModeDropdown),
                     projectPath: projectPathText.text,
@@ -347,17 +348,18 @@
                     exportReferenceFrames: referenceFramesCheckbox.value,
                     generateShaderAndMaterial: generateShaderCheckbox.value
                 });
+                showStatusResult(panel, status, exportResult);
             } catch (error) {
-                status.text = "Export failed: " + error.toString();
+                showStatusResult(panel, status, "Export failed: " + error.toString());
                 alert(status.text);
             }
         };
 
         checkResultButton.onClick = function () {
             try {
-                status.text = readLastBridgeResult(projectPathText.text);
+                showStatusResult(panel, status, readLastBridgeResult(projectPathText.text));
             } catch (error) {
-                status.text = "Result check failed: " + error.toString();
+                showStatusResult(panel, status, "Result check failed: " + error.toString());
                 alert(status.text);
             }
         };
@@ -718,6 +720,45 @@
         applyCompactPages(panel, true);
         relayoutPanel(panel);
         return true;
+    }
+
+    function setCompactPageByTitle(panel, title) {
+        var pager = panel ? panel.ae2unityCompactPager : null;
+        if (!pager || !pager.pages || !panel.ae2unityIsCompact) {
+            return false;
+        }
+
+        for (var i = 0; i < pager.pages.length; i++) {
+            if (pager.pages[i] && pager.pages[i].title === title) {
+                return setCompactPage(panel, i);
+            }
+        }
+
+        return false;
+    }
+
+    function showStatusResult(panel, statusControl, message) {
+        if (statusControl) {
+            statusControl.text = message || "";
+        }
+
+        setCompactPageByTitle(panel, "Result");
+        relayoutPanel(panel);
+        flushPanelUi(panel);
+    }
+
+    function flushPanelUi(panel) {
+        try {
+            if (panel && panel.update) {
+                panel.update();
+            }
+        } catch (ignoredPanelUpdate) {
+        }
+
+        try {
+            app.refresh();
+        } catch (ignoredAppRefresh) {
+        }
     }
 
     function advanceCompactPage(panel, direction) {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.9
+
+- Added compact status routing so `Run Export` automatically switches to the Result page before writing progress or final status text.
+- Added a visible `Running export...` status before the export workflow starts.
+- Reused the same status routing for bridge result checks and export failures.
+
 ## 0.2.8
 
 - Fixed compact page controls disappearing after switching pages in narrow AE docked panels.
