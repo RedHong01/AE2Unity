@@ -20,6 +20,10 @@ This is not a full one-click replacement for every After Effects feature yet. Th
 
 The package uses C# editor/runtime code, ShaderLab/HLSL, and ExtendScript (`.jsx`). It does not require native DLLs.
 
+### Documentation Rule
+
+Repository files mentioned in this README are written as clickable Markdown links, such as [Tools/AfterEffects/ae2unityshader.jsx](Tools/AfterEffects/ae2unityshader.jsx). Local Unity project files, Unity Hub files, and generated export paths remain code paths because they do not exist inside this package repository.
+
 ### Install From Git
 
 In Unity 6, install this package from the Package Manager:
@@ -49,7 +53,7 @@ If the repository is private, Unity must have GitHub access through your local G
 
 ### AEBridge Workflow
 
-1. Install `Tools/AfterEffects/ae2unityshader.jsx` into the After Effects `Scripts/ScriptUI Panels` folder.
+1. Install [Tools/AfterEffects/ae2unityshader.jsx](Tools/AfterEffects/ae2unityshader.jsx) into the After Effects `Scripts/ScriptUI Panels` folder.
 2. Restart After Effects.
 3. Open `Window > ae2unityshader.jsx`.
 4. Select a Unity project from the Unity Hub project dropdown.
@@ -107,7 +111,7 @@ Bridge utilities are also available in `Tools > ae2unityshader`.
 
 ### License
 
-This project is released under the MIT License. Community users may use, modify, and redistribute it, including in commercial projects, as long as the copyright and license notice are preserved. See `LICENSE` for the full text.
+This project is released under the MIT License. Community users may use, modify, and redistribute it, including in commercial projects, as long as the copyright and license notice are preserved. See [LICENSE](LICENSE) for the full text.
 
 ## 中文
 
@@ -128,6 +132,10 @@ This project is released under the MIT License. Community users may use, modify,
 - 可选：当使用媒体导出模式时，需要 Adobe Media Encoder。
 
 这个 package 使用 C# editor/runtime 代码、ShaderLab/HLSL 和 ExtendScript (`.jsx`)。它不依赖 native DLL。
+
+### 文档规则
+
+这个 README 中提到的仓库内文件会写成可点击的 Markdown 链接，例如 [Tools/AfterEffects/ae2unityshader.jsx](Tools/AfterEffects/ae2unityshader.jsx)。本地 Unity 项目文件、Unity Hub 文件，以及导出生成路径会保留为代码路径，因为它们不在这个 package repo 内。
 
 ### 通过 Git 安装
 
@@ -158,7 +166,7 @@ https://github.com/RedHong01/ae2unityshader.git
 
 ### AEBridge 工作流程
 
-1. 把 `Tools/AfterEffects/ae2unityshader.jsx` 安装到 After Effects 的 `Scripts/ScriptUI Panels` 文件夹。
+1. 把 [Tools/AfterEffects/ae2unityshader.jsx](Tools/AfterEffects/ae2unityshader.jsx) 安装到 After Effects 的 `Scripts/ScriptUI Panels` 文件夹。
 2. 重启 After Effects。
 3. 从 `Window > ae2unityshader.jsx` 打开面板。
 4. 在 AE 面板中从 Unity Hub 项目列表选择 Unity project。
@@ -216,4 +224,4 @@ Bridge 工具也可以从 `Tools > ae2unityshader` 使用。
 
 ### 开源许可证
 
-本项目使用 MIT License 发布。社区用户可以使用、修改和再分发，也可以用于商业项目，只需要保留版权和许可证声明。完整条款见 `LICENSE`。
+本项目使用 MIT License 发布。社区用户可以使用、修改和再分发，也可以用于商业项目，只需要保留版权和许可证声明。完整条款见 [LICENSE](LICENSE)。
