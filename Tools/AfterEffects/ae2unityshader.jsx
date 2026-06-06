@@ -23,6 +23,8 @@
     var UI_PANEL_MIN_HEIGHT = 360;
     var UI_COMPACT_BREAKPOINT = 620;
     var UI_COMPACT_HORIZONTAL_MARGIN = 36;
+    var UI_COMPACT_RESULT_GROUP_HEIGHT = 178;
+    var UI_COMPACT_RESULT_STATUS_HEIGHT = 132;
     var UI_FULL_WINDOW_SIZE = [860, 560];
     var UI_COMPACT_WINDOW_SIZE = [340, 560];
     var UI_MAX_VISIBLE_HEIGHT = 10000;
@@ -203,15 +205,28 @@
         runExportButton.preferredSize.height = 34;
         runExportButton.ae2unityCompactVisibleHeight = 34;
         setHelpTip(runExportButton, "Run the selected export workflow.");
-        var checkResultButton = panel.add("button", undefined, "Check Last Bridge Result");
+        var resultGroup = panel.add("group");
+        resultGroup.orientation = "column";
+        resultGroup.alignChildren = ["fill", "top"];
+        resultGroup.alignment = ["fill", "top"];
+        resultGroup.spacing = 6;
+        resultGroup.margins = 0;
+        resultGroup.ae2unityResultGroup = true;
+        resultGroup.ae2unityCompactVisibleHeight = UI_COMPACT_RESULT_GROUP_HEIGHT;
+        setHelpTip(resultGroup, "Latest Unity bridge status and export feedback.");
+
+        var checkResultButton = resultGroup.add("button", undefined, "Check Last Bridge Result");
         checkResultButton.alignment = ["fill", "top"];
         checkResultButton.preferredSize.height = 34;
         checkResultButton.ae2unityCompactVisibleHeight = 34;
         setHelpTip(checkResultButton, "Read the latest Unity AEBridge result file.");
-        var status = panel.add("statictext", undefined, "Ready");
+        var status = resultGroup.add("edittext", undefined, "Ready", { multiline: true, readonly: true, scrolling: true });
         status.alignment = ["fill", "top"];
-        status.preferredSize.height = 48;
-        status.ae2unityCompactVisibleHeight = 72;
+        status.minimumSize.height = 72;
+        status.preferredSize.height = 88;
+        status.ae2unityResultStatus = true;
+        status.ae2unityCompactVisibleHeight = UI_COMPACT_RESULT_STATUS_HEIGHT;
+        stretchControl(status, UI_FIELD_WIDTH, 160);
         setHelpTip(status, "Shows export progress, warnings, and bridge results.");
 
         setCompactPages(panel, [
@@ -221,7 +236,7 @@
             },
             {
                 title: "Result",
-                controls: [checkResultButton, status]
+                controls: [resultGroup]
             },
             {
                 title: "Paths",
@@ -585,6 +600,26 @@
                     control.minimumSize.width = control.ae2unityMinimumWidth;
                     control.preferredSize.width = control.ae2unityPreferredWidth;
                 }
+            }
+
+            if (control.ae2unityResultGroup) {
+                control.orientation = "column";
+                control.alignChildren = ["fill", "top"];
+                control.alignment = ["fill", "top"];
+                control.spacing = compact ? 6 : 8;
+                control.minimumSize.width = compact ? 80 : UI_FIELD_WIDTH;
+                control.preferredSize.width = compact ? compactWidth : UI_FIELD_WIDTH;
+                control.ae2unityCompactVisibleHeight = UI_COMPACT_RESULT_GROUP_HEIGHT;
+            }
+
+            if (control.ae2unityResultStatus) {
+                control.alignment = ["fill", "top"];
+                control.minimumSize.width = compact ? 80 : 160;
+                control.preferredSize.width = compact ? compactWidth : UI_FIELD_WIDTH;
+                control.minimumSize.height = compact ? 96 : 72;
+                control.preferredSize.height = compact ? UI_COMPACT_RESULT_STATUS_HEIGHT : 88;
+                control.maximumSize.height = compact ? UI_COMPACT_RESULT_STATUS_HEIGHT : UI_MAX_VISIBLE_HEIGHT;
+                control.ae2unityCompactVisibleHeight = UI_COMPACT_RESULT_STATUS_HEIGHT;
             }
         });
 

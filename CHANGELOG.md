@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.10
+
+- Rebuilt the compact Result page as a dedicated result group with fixed narrow-panel sizing.
+- Changed the Result status area to a readonly multiline text box so progress and bridge messages remain visible in small AE sidebars.
+- Added compact-only Result sizing rules so the second compact page no longer appears blank unless the panel is widened.
+
 ## 0.2.9
 
 - Added compact status routing so `Run Export` automatically switches to the Result page before writing progress or final status text.
