@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace DuoCurtain.AE2UnityShader
+namespace AE2UnityShader
 {
     public sealed class Ae2ShaderClip : ScriptableObject
     {

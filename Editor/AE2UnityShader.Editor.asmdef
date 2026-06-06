@@ -1,8 +1,8 @@
 {
-  "name": "DuoCurtain.AE2UnityShader.Editor",
-  "rootNamespace": "DuoCurtain.AE2UnityShader.Editor",
+  "name": "AE2UnityShader.Editor",
+  "rootNamespace": "AE2UnityShader.Editor",
   "references": [
-    "DuoCurtain.AE2UnityShader.Runtime"
+    "AE2UnityShader.Runtime"
   ],
   "includePlatforms": [
     "Editor"

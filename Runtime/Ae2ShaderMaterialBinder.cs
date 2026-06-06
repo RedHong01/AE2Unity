@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace DuoCurtain.AE2UnityShader
+namespace AE2UnityShader
 {
     [ExecuteAlways]
     [DisallowMultipleComponent]

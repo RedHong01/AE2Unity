@@ -1,8 +1,8 @@
-using DuoCurtain.AE2UnityShader;
+using AE2UnityShader;
 using UnityEditor;
 using UnityEngine;
 
-namespace DuoCurtain.AE2UnityShader.Editor
+namespace AE2UnityShader.Editor
 {
     [CustomEditor(typeof(Ae2ShaderClip))]
     public sealed class Ae2ShaderClipEditor : UnityEditor.Editor
@@ -13,7 +13,7 @@ namespace DuoCurtain.AE2UnityShader.Editor
             var document = clip.Document;
             var comp = document?.comp;
 
-            EditorGUILayout.LabelField("AE2Unity Shader Clip", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("ae2unityshader Clip", EditorStyles.boldLabel);
             using (new EditorGUI.DisabledScope(true))
             {
                 EditorGUILayout.TextField("Schema", document?.schemaVersion ?? "unknown");

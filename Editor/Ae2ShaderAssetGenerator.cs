@@ -1,10 +1,10 @@
 using System;
 using System.IO;
-using DuoCurtain.AE2UnityShader;
+using AE2UnityShader;
 using UnityEditor;
 using UnityEngine;
 
-namespace DuoCurtain.AE2UnityShader.Editor
+namespace AE2UnityShader.Editor
 {
     internal readonly struct Ae2ShaderGenerationResult
     {
@@ -47,7 +47,7 @@ namespace DuoCurtain.AE2UnityShader.Editor
                 materialAssetPath = AssetDatabase.GenerateUniqueAssetPath(materialAssetPath);
             }
 
-            var shaderName = $"Duo Curtain/AE2Unity/Generated/{SanitizeShaderName(baseName)}";
+            var shaderName = $"ae2unityshader/Generated/{SanitizeShaderName(baseName)}";
             var shaderCode = Ae2ShaderCodeGenerator.GeneratePreviewShader(clip, shaderName);
             WriteTextIfChanged(shaderAssetPath, shaderCode);
             AssetDatabase.ImportAsset(shaderAssetPath, ImportAssetOptions.ForceSynchronousImport);

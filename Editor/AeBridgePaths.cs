@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace DuoCurtain.AE2UnityShader.Editor
+namespace AE2UnityShader.Editor
 {
     internal static class AeBridgePaths
     {

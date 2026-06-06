@@ -1,10 +1,10 @@
 using System;
 using System.IO;
-using DuoCurtain.AE2UnityShader;
+using AE2UnityShader;
 using UnityEditor;
 using UnityEngine;
 
-namespace DuoCurtain.AE2UnityShader.Editor
+namespace AE2UnityShader.Editor
 {
     [InitializeOnLoad]
     internal static class AeBridgeReceiver
@@ -174,7 +174,7 @@ namespace DuoCurtain.AE2UnityShader.Editor
             var normalized = (folder ?? string.Empty).Replace('\\', '/').Trim('/');
             if (string.IsNullOrWhiteSpace(normalized))
             {
-                normalized = "Assets/AE2Unity/Exports";
+                normalized = "Assets/ae2unityshader/Exports";
             }
 
             if (!(normalized == "Assets" || normalized.StartsWith("Assets/", StringComparison.Ordinal)))

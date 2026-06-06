@@ -1,7 +1,7 @@
-using DuoCurtain.AE2UnityShader;
+using AE2UnityShader;
 using UnityEditor;
 
-namespace DuoCurtain.AE2UnityShader.Editor
+namespace AE2UnityShader.Editor
 {
     internal static class Ae2ShaderMenu
     {
@@ -16,20 +16,20 @@ namespace DuoCurtain.AE2UnityShader.Editor
         {
             if (!TryGetSelectedClip(out var clip, out var sourcePath))
             {
-                EditorUtility.DisplayDialog("AE2Unity Shader", "Select an .ae2shader asset first.", "OK");
+                EditorUtility.DisplayDialog("ae2unityshader", "Select an .ae2shader asset first.", "OK");
                 return;
             }
 
             GenerateShaderAssets(clip, sourcePath);
         }
 
-        [MenuItem("Tools/Duo Curtain AE2Unity/Process AEBridge Inbox Now")]
+        [MenuItem("Tools/ae2unityshader/Process AEBridge Inbox Now")]
         private static void ProcessBridgeInboxNow()
         {
             AeBridgeReceiver.ProcessInbox();
         }
 
-        [MenuItem("Tools/Duo Curtain AE2Unity/Open AEBridge Folder")]
+        [MenuItem("Tools/ae2unityshader/Open AEBridge Folder")]
         private static void OpenBridgeFolder()
         {
             AeBridgePaths.EnsureFolders();
@@ -41,12 +41,12 @@ namespace DuoCurtain.AE2UnityShader.Editor
             var result = Ae2ShaderAssetGenerator.Generate(clip, sourcePath, Ae2ShaderEditorSettings.instance.OverwriteGeneratedAssets);
             if (!result.Success)
             {
-                EditorUtility.DisplayDialog("AE2Unity Shader", result.Message, "OK");
+                EditorUtility.DisplayDialog("ae2unityshader", result.Message, "OK");
                 return;
             }
 
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(result.MaterialAssetPath);
-            EditorUtility.DisplayDialog("AE2Unity Shader", $"Generated:\n{result.ShaderAssetPath}\n{result.MaterialAssetPath}", "OK");
+            EditorUtility.DisplayDialog("ae2unityshader", $"Generated:\n{result.ShaderAssetPath}\n{result.MaterialAssetPath}", "OK");
         }
 
         private static bool TryGetSelectedClip(out Ae2ShaderClip clip, out string assetPath)

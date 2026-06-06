@@ -1,6 +1,6 @@
 using System;
 
-namespace DuoCurtain.AE2UnityShader.Editor
+namespace AE2UnityShader.Editor
 {
     internal static class AeBridgeProtocol
     {
@@ -26,7 +26,7 @@ namespace DuoCurtain.AE2UnityShader.Editor
         public string compName = string.Empty;
         public string payloadFile = string.Empty;
         public string referenceFramesFolder = string.Empty;
-        public string unityOutputPath = "Assets/AE2Unity/Exports";
+        public string unityOutputPath = "Assets/ae2unityshader/Exports";
         public bool overwriteGeneratedAssets = true;
         public bool generateShaderAndMaterial = true;
         public bool refreshAssetDatabase = true;

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using DuoCurtain.AE2UnityShader;
+using AE2UnityShader;
 
-namespace DuoCurtain.AE2UnityShader.Editor
+namespace AE2UnityShader.Editor
 {
     internal static class Ae2ShaderCapabilityAnalyzer
     {

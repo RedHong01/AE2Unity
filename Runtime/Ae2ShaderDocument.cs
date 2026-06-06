@@ -1,6 +1,6 @@
 using System;
 
-namespace DuoCurtain.AE2UnityShader
+namespace AE2UnityShader
 {
     [Serializable]
     public sealed class Ae2ShaderDocument

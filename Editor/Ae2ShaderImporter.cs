@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using DuoCurtain.AE2UnityShader;
+using AE2UnityShader;
 using UnityEditor.AssetImporters;
 using UnityEngine;
 
-namespace DuoCurtain.AE2UnityShader.Editor
+namespace AE2UnityShader.Editor
 {
     [ScriptedImporter(1, "ae2shader")]
     public sealed class Ae2ShaderImporter : ScriptedImporter

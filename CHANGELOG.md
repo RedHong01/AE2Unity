@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- Renamed the public tool, AE panel, documentation, shader/menu paths, and GitHub repository to `ae2unityshader`.
+- Renamed the Unity package identifier to `com.redhong01.ae2unityshader`.
+- Renamed the After Effects ScriptUI panel file to `ae2unityshader.jsx` and installers now remove the legacy `AE2UnityShaderExport.jsx` panel.
+- Added legacy AE settings fallback so existing saved paths and options migrate into the new panel name.
+
 ## 0.1.1
 
 - Added dock-friendly responsive layout for the AE ScriptUI panel.

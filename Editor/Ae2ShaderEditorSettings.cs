@@ -1,15 +1,15 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace DuoCurtain.AE2UnityShader.Editor
+namespace AE2UnityShader.Editor
 {
-    [FilePath("ProjectSettings/DuoCurtainAE2UnityShaderSettings.asset", FilePathAttribute.Location.ProjectFolder)]
+    [FilePath("ProjectSettings/ae2unityshaderSettings.asset", FilePathAttribute.Location.ProjectFolder)]
     internal sealed class Ae2ShaderEditorSettings : ScriptableSingleton<Ae2ShaderEditorSettings>
     {
         [SerializeField] private bool autoGenerateOnImport = true;
         [SerializeField] private bool overwriteGeneratedAssets = true;
         [SerializeField] private bool bridgeReceiverEnabled = true;
-        [SerializeField] private string defaultBridgeOutputPath = "Assets/AE2Unity/Exports";
+        [SerializeField] private string defaultBridgeOutputPath = "Assets/ae2unityshader/Exports";
 
         public bool AutoGenerateOnImport
         {
@@ -59,7 +59,7 @@ namespace DuoCurtain.AE2UnityShader.Editor
         public string DefaultBridgeOutputPath
         {
             get => string.IsNullOrWhiteSpace(defaultBridgeOutputPath)
-                ? "Assets/AE2Unity/Exports"
+                ? "Assets/ae2unityshader/Exports"
                 : defaultBridgeOutputPath;
             set
             {

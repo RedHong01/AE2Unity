@@ -1,4 +1,4 @@
-Shader "Duo Curtain/AE2Unity/Composite Unlit"
+Shader "ae2unityshader/Composite Unlit"
 {
     Properties
     {

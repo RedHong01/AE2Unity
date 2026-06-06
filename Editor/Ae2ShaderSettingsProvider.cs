@@ -1,15 +1,15 @@
 using UnityEditor;
 
-namespace DuoCurtain.AE2UnityShader.Editor
+namespace AE2UnityShader.Editor
 {
     internal static class Ae2ShaderSettingsProvider
     {
         [SettingsProvider]
         public static SettingsProvider CreateProvider()
         {
-            return new SettingsProvider("Project/Duo Curtain/AE2Unity Shader", SettingsScope.Project)
+            return new SettingsProvider("Project/ae2unityshader", SettingsScope.Project)
             {
-                label = "AE2Unity Shader",
+                label = "ae2unityshader",
                 guiHandler = _ =>
                 {
                     var settings = Ae2ShaderEditorSettings.instance;

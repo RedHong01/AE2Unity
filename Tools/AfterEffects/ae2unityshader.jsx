@@ -1,4 +1,4 @@
-/* Duo Curtain AE2Unity Shader Exporter
+/* ae2unityshader exporter
  * After Effects 2026 ExtendScript panel.
  *
  * Install options:
@@ -7,11 +7,12 @@
  */
 
 (function ae2UnityShaderExporter(thisObj) {
-    var SCRIPT_NAME = "AE2Unity Shader Export";
+    var SCRIPT_NAME = "ae2unityshader";
     var SCHEMA_VERSION = "0.1.0";
-    var SETTINGS_SECTION = "DuoCurtainAE2UnityShader";
-    var DEFAULT_UNITY_EXPORT_RELATIVE_PATH = "Assets/AE2Unity/Exports";
-    var DEFAULT_MEDIA_EXPORT_RELATIVE_PATH = "Assets/AE2Unity/Media";
+    var SETTINGS_SECTION = "ae2unityshader";
+    var LEGACY_SETTINGS_SECTIONS = ["DuoCurtainAE2UnityShader"];
+    var DEFAULT_UNITY_EXPORT_RELATIVE_PATH = "Assets/ae2unityshader/Exports";
+    var DEFAULT_MEDIA_EXPORT_RELATIVE_PATH = "Assets/ae2unityshader/Media";
     var BRIDGE_FOLDER_NAME = ".ae2unitybridge";
     var UI_LABEL_WIDTH = 136;
     var UI_BUTTON_WIDTH = 104;
@@ -1121,7 +1122,7 @@
 
         var document = {
             schemaVersion: SCHEMA_VERSION,
-            exporter: "Duo Curtain AE2Unity Shader Exporter 0.1.0",
+            exporter: "ae2unityshader exporter 0.2.0",
             exportedAt: new Date().toUTCString(),
             comp: collectComp(comp),
             layers: layers,
@@ -1199,7 +1200,15 @@
                 return app.settings.getSetting(SETTINGS_SECTION, key);
             }
         } catch (ignoredSettingLoad) {
-            return fallback;
+        }
+
+        for (var i = 0; i < LEGACY_SETTINGS_SECTIONS.length; i++) {
+            try {
+                if (app.settings.haveSetting(LEGACY_SETTINGS_SECTIONS[i], key)) {
+                    return app.settings.getSetting(LEGACY_SETTINGS_SECTIONS[i], key);
+                }
+            } catch (ignoredLegacySettingLoad) {
+            }
         }
 
         return fallback;
