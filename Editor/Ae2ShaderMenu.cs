@@ -1,7 +1,7 @@
-using AE2UnityShader;
+using AE2Unity;
 using UnityEditor;
 
-namespace AE2UnityShader.Editor
+namespace AE2Unity.Editor
 {
     internal static class Ae2ShaderMenu
     {
@@ -16,20 +16,20 @@ namespace AE2UnityShader.Editor
         {
             if (!TryGetSelectedClip(out var clip, out var sourcePath))
             {
-                EditorUtility.DisplayDialog("ae2unityshader", "Select an .ae2shader asset first.", "OK");
+                EditorUtility.DisplayDialog("AE2Unity", "Select an .ae2shader asset first.", "OK");
                 return;
             }
 
             GenerateShaderAssets(clip, sourcePath);
         }
 
-        [MenuItem("Tools/ae2unityshader/Process AEBridge Inbox Now")]
+        [MenuItem("Tools/AE2Unity/Process AEBridge Inbox Now")]
         private static void ProcessBridgeInboxNow()
         {
             AeBridgeReceiver.ProcessInbox();
         }
 
-        [MenuItem("Tools/ae2unityshader/Open AEBridge Folder")]
+        [MenuItem("Tools/AE2Unity/Open AEBridge Folder")]
         private static void OpenBridgeFolder()
         {
             AeBridgePaths.EnsureFolders();
@@ -41,12 +41,12 @@ namespace AE2UnityShader.Editor
             var result = Ae2ShaderAssetGenerator.Generate(clip, sourcePath, Ae2ShaderEditorSettings.instance.OverwriteGeneratedAssets);
             if (!result.Success)
             {
-                EditorUtility.DisplayDialog("ae2unityshader", result.Message, "OK");
+                EditorUtility.DisplayDialog("AE2Unity", result.Message, "OK");
                 return;
             }
 
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(result.MaterialAssetPath);
-            EditorUtility.DisplayDialog("ae2unityshader", $"Generated:\n{result.ShaderAssetPath}\n{result.MaterialAssetPath}", "OK");
+            EditorUtility.DisplayDialog("AE2Unity", $"Generated:\n{result.ShaderAssetPath}\n{result.MaterialAssetPath}", "OK");
         }
 
         private static bool TryGetSelectedClip(out Ae2ShaderClip clip, out string assetPath)

@@ -1,8 +1,8 @@
-using AE2UnityShader;
+using AE2Unity;
 using UnityEditor;
 using UnityEngine;
 
-namespace AE2UnityShader.Editor
+namespace AE2Unity.Editor
 {
     [CustomEditor(typeof(Ae2ShaderClip))]
     public sealed class Ae2ShaderClipEditor : UnityEditor.Editor
@@ -13,7 +13,7 @@ namespace AE2UnityShader.Editor
             var document = clip.Document;
             var comp = document?.comp;
 
-            EditorGUILayout.LabelField("ae2unityshader Clip", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("AE2Unity Clip", EditorStyles.boldLabel);
             using (new EditorGUI.DisabledScope(true))
             {
                 EditorGUILayout.TextField("Schema", document?.schemaVersion ?? "unknown");

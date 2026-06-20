@@ -1,15 +1,15 @@
 using UnityEditor;
 
-namespace AE2UnityShader.Editor
+namespace AE2Unity.Editor
 {
     internal static class Ae2ShaderSettingsProvider
     {
         [SettingsProvider]
         public static SettingsProvider CreateProvider()
         {
-            return new SettingsProvider("Project/ae2unityshader", SettingsScope.Project)
+            return new SettingsProvider("Project/AE2Unity", SettingsScope.Project)
             {
-                label = "ae2unityshader",
+                label = "AE2Unity",
                 guiHandler = _ =>
                 {
                     var settings = Ae2ShaderEditorSettings.instance;

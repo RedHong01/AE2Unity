@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://duocurtain.local/schemas/ae2shader-0.1.0.schema.json",
-  "title": "ae2unityshader Export",
+  "title": "AE2Unity Export",
   "type": "object",
   "required": ["schemaVersion", "comp", "layers"],
   "properties": {

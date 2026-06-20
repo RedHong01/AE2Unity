@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using AE2UnityShader;
+using AE2Unity;
 using UnityEditor;
 using UnityEngine;
 
-namespace AE2UnityShader.Editor
+namespace AE2Unity.Editor
 {
     internal sealed class Ae2ShaderImportAutoGenerator : AssetPostprocessor
     {
@@ -66,7 +66,7 @@ namespace AE2UnityShader.Editor
             var clip = AssetDatabase.LoadAssetAtPath<Ae2ShaderClip>(path);
             if (clip == null)
             {
-                Debug.LogWarning($"ae2unityshader auto-generate skipped because no clip was loaded at {path}.");
+                Debug.LogWarning($"AE2Unity auto-generate skipped because no clip was loaded at {path}.");
                 return;
             }
 
@@ -77,11 +77,11 @@ namespace AE2UnityShader.Editor
 
             if (!result.Success)
             {
-                Debug.LogWarning($"ae2unityshader auto-generate failed for {path}: {result.Message}");
+                Debug.LogWarning($"AE2Unity auto-generate failed for {path}: {result.Message}");
                 return;
             }
 
-            Debug.Log($"ae2unityshader auto-generated {result.ShaderAssetPath} and {result.MaterialAssetPath}.");
+            Debug.Log($"AE2Unity auto-generated {result.ShaderAssetPath} and {result.MaterialAssetPath}.");
         }
     }
 }

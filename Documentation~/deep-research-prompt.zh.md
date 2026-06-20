@@ -4,7 +4,7 @@
 
 ## 当前项目背景
 
-我正在开发一个跨平台插件系统，暂名为 `ae2unityshader / AEBridge`。
+我正在开发一个跨平台插件系统，暂名为 `AE2Unity / AEBridge`。
 
 目标用户是：希望把 After Effects 里的 2D motion graphics、UI 动效、视觉设计、特效设计，尽可能自动化地转换到 Unity 6 项目中的技术美术、游戏设计师、交互设计师、独立开发者。
 
@@ -26,7 +26,7 @@ AE Plugin
 
 Unity AEBridge Receiver
   -> polls inbox
-  -> imports payload into Assets/ae2unityshader/Exports
+  -> imports payload into Assets/AE2Unity/Exports
   -> generates .generated.shader and .generated.mat
   -> writes .ae2unitybridge/outbox/<JobId>.result.json
 ```

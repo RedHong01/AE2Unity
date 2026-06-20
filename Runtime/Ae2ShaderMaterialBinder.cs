@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace AE2UnityShader
+namespace AE2Unity
 {
     [ExecuteAlways]
     [DisallowMultipleComponent]

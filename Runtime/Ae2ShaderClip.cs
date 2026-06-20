@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace AE2UnityShader
+namespace AE2Unity
 {
     public sealed class Ae2ShaderClip : ScriptableObject
     {

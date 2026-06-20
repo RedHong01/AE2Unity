@@ -1,8 +1,8 @@
-# ae2unityshader
+# AE2Unity
 
 ## English
 
-`ae2unityshader` is an early automation scaffold for moving constrained Adobe After Effects 2026 compositions into Unity 6 as shader/material assets.
+`AE2Unity` is an early automation scaffold for moving constrained Adobe After Effects 2026 compositions into Unity 6 as shader/material assets.
 
 The current workflow combines two sides:
 
@@ -22,7 +22,7 @@ The package uses C# editor/runtime code, ShaderLab/HLSL, and ExtendScript (`.jsx
 
 ### Documentation Rule
 
-Repository files mentioned in this README are written as clickable Markdown links, such as [Tools/AfterEffects/ae2unityshader.jsx](Tools/AfterEffects/ae2unityshader.jsx). Local Unity project files, Unity Hub files, and generated export paths remain code paths because they do not exist inside this package repository.
+Repository files mentioned in this README are written as clickable Markdown links, such as [Tools/AfterEffects/AE2Unity.jsx](Tools/AfterEffects/AE2Unity.jsx). Local Unity project files, Unity Hub files, and generated export paths remain code paths because they do not exist inside this package repository.
 
 ### Install From Git
 
@@ -34,38 +34,38 @@ In Unity 6, install this package from the Package Manager:
 4. Enter:
 
 ```text
-https://github.com/RedHong01/ae2unityshader.git
+https://github.com/RedHong01/AE2Unity.git
 ```
 
 You can also add it directly to `Packages/manifest.json`:
 
 ```json
-"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git"
+"com.redhong01.ae2unity": "https://github.com/RedHong01/AE2Unity.git"
 ```
 
 To pin a release, use a tag:
 
 ```json
-"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.12"
+"com.redhong01.ae2unity": "https://github.com/RedHong01/AE2Unity.git#v0.3.0"
 ```
 
 If the repository is private, Unity must have GitHub access through your local Git credentials.
 
 ### AEBridge Workflow
 
-1. Install [Tools/AfterEffects/ae2unityshader.jsx](Tools/AfterEffects/ae2unityshader.jsx) into the After Effects `Scripts/ScriptUI Panels` folder.
+1. Install [Tools/AfterEffects/AE2Unity.jsx](Tools/AfterEffects/AE2Unity.jsx) into the After Effects `Scripts/ScriptUI Panels` folder.
 2. Restart After Effects.
-3. Open `Window > ae2unityshader.jsx`.
+3. Open `Window > AE2Unity.jsx`.
 4. Select a Unity project from the Unity Hub project dropdown.
 5. Choose the active composition or a specific composition.
 6. Choose an export mode, such as `AEBridge: .ae2shader -> Unity shader/material`.
 7. Click `Run Export`.
 8. The AE panel writes a bridge job into `.ae2unitybridge/inbox`.
-9. Unity's AEBridge receiver imports the payload into `Assets/ae2unityshader/Exports/<CompName>.ae2shader`.
+9. Unity's AEBridge receiver imports the payload into `Assets/AE2Unity/Exports/<CompName>.ae2shader`.
 10. Unity generates `<CompName>.generated.shader` and `<CompName>.generated.mat`.
 11. Unity writes the result to `.ae2unitybridge/outbox`, which the AE panel can read with `Check Last Bridge Result`.
 
-Direct export and manual generation are still available through `Direct .ae2shader into Unity Assets`, `Manual folder .ae2shader export`, and `Assets > ae2unityshader > Generate Shader From AE2Shader`.
+Direct export and manual generation are still available through `Direct .ae2shader into Unity Assets`, `Manual folder .ae2shader export`, and `Assets > AE2Unity > Generate Shader From AE2Shader`.
 
 ### After Effects Panel
 
@@ -73,7 +73,7 @@ The AE panel reads Unity Hub's local `projects-v1.json` and `projectSortPreferen
 
 Panels opened from the `Window` menu can be dragged by their panel tab and docked into AE sidebars or saved workspaces. If you run the JSX through `File > Scripts > Run Script File...`, After Effects opens it as a standalone palette, which is useful for testing but cannot be docked into the workspace.
 
-The panel switches to a compact paged layout when docked into a narrow sidebar. Compact mode groups controls into Export, Result, Paths, and Media sections. Use the compact `Up`/`Down` controls, arrow keys, Page Up/Page Down, the compact scrollbar, or mouse wheel when AE forwards wheel events to browse sections. The compact header also includes `Run` on the Export page and `Full`, which opens a complete standalone ae2unityshader window without removing the docked panel. Each compact page uses explicit narrow-panel sizing so Export, Result, Paths, and Media controls remain visible in small sidebars. Export actions automatically switch compact mode to the Result page before writing progress or final status text. The compact Result page uses a fixed narrow-panel result box so status text remains visible in small sidebars.
+The panel switches to a compact paged layout when docked into a narrow sidebar. Compact mode groups controls into Export, Result, Paths, and Media sections. Use the compact `Up`/`Down` controls, arrow keys, Page Up/Page Down, the compact scrollbar, or mouse wheel when AE forwards wheel events to browse sections. The compact header also includes `Run` on the Export page and `Full`, which opens a complete standalone AE2Unity window without removing the docked panel. Each compact page uses explicit narrow-panel sizing so Export, Result, Paths, and Media controls remain visible in small sidebars. Export actions automatically switch compact mode to the Result page before writing progress or final status text. The compact Result page uses a fixed narrow-panel result box so status text remains visible in small sidebars.
 
 Standalone windows include `Compact` and `Full Size` buttons. You can also use `Ctrl/Cmd+Shift+C` to switch a standalone window into compact mode and `Ctrl/Cmd+Shift+F` to restore the full layout. Wider floating or docked layouts show the full set of path, media, refresh, reference frame, and generation options at once.
 
@@ -92,7 +92,7 @@ Standalone windows include `Compact` and `Full Size` buttons. You can also use `
 - Transform keyframes: anchor, position, scale, rotation, opacity.
 - Source footage path references.
 - Basic effect/mask metadata for capability analysis.
-- Unity material preview through `ae2unityshader/Composite Unlit`.
+- Unity material preview through `AE2Unity/Composite Unlit`.
 
 ### Known Fallbacks
 
@@ -100,14 +100,14 @@ The importer marks complex features as warnings rather than silently pretending 
 
 ### Unity Settings
 
-Open `Project Settings > ae2unityshader`.
+Open `Project Settings > AE2Unity`.
 
 - `Auto Generate On Import`: when enabled, Unity generates shader/material assets whenever an `.ae2shader` file is imported.
 - `Overwrite Generated Assets`: when enabled, repeat exports update the same `.generated.shader` and `.generated.mat` files.
 - `AEBridge Receiver Enabled`: when enabled, Unity polls `.ae2unitybridge/inbox` for AE jobs.
 - `Bridge Output Path`: default Unity asset folder for bridge imports.
 
-Bridge utilities are also available in `Tools > ae2unityshader`.
+Bridge utilities are also available in `Tools > AE2Unity`.
 
 ### License
 
@@ -115,7 +115,7 @@ This project is released under the MIT License. Community users may use, modify,
 
 ## 中文
 
-`ae2unityshader` 是一个早期自动化工具框架，用来把受控范围内的 Adobe After Effects 2026 合成转换到 Unity 6 中，并生成 shader/material 资产。
+`AE2Unity` 是一个早期自动化工具框架，用来把受控范围内的 Adobe After Effects 2026 合成转换到 Unity 6 中，并生成 shader/material 资产。
 
 目前这套工作流由两部分组成：
 
@@ -135,7 +135,7 @@ This project is released under the MIT License. Community users may use, modify,
 
 ### 文档规则
 
-这个 README 中提到的仓库内文件会写成可点击的 Markdown 链接，例如 [Tools/AfterEffects/ae2unityshader.jsx](Tools/AfterEffects/ae2unityshader.jsx)。本地 Unity 项目文件、Unity Hub 文件，以及导出生成路径会保留为代码路径，因为它们不在这个 package repo 内。
+这个 README 中提到的仓库内文件会写成可点击的 Markdown 链接，例如 [Tools/AfterEffects/AE2Unity.jsx](Tools/AfterEffects/AE2Unity.jsx)。本地 Unity 项目文件、Unity Hub 文件，以及导出生成路径会保留为代码路径，因为它们不在这个 package repo 内。
 
 ### 通过 Git 安装
 
@@ -147,38 +147,38 @@ This project is released under the MIT License. Community users may use, modify,
 4. 输入：
 
 ```text
-https://github.com/RedHong01/ae2unityshader.git
+https://github.com/RedHong01/AE2Unity.git
 ```
 
 你也可以直接写入 `Packages/manifest.json`：
 
 ```json
-"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git"
+"com.redhong01.ae2unity": "https://github.com/RedHong01/AE2Unity.git"
 ```
 
 如果希望锁定某个 release，可以使用 tag：
 
 ```json
-"com.redhong01.ae2unityshader": "https://github.com/RedHong01/ae2unityshader.git#v0.2.12"
+"com.redhong01.ae2unity": "https://github.com/RedHong01/AE2Unity.git#v0.3.0"
 ```
 
 如果 repo 是 private，Unity 需要能够通过你本地的 Git 凭据访问 GitHub。
 
 ### AEBridge 工作流程
 
-1. 把 [Tools/AfterEffects/ae2unityshader.jsx](Tools/AfterEffects/ae2unityshader.jsx) 安装到 After Effects 的 `Scripts/ScriptUI Panels` 文件夹。
+1. 把 [Tools/AfterEffects/AE2Unity.jsx](Tools/AfterEffects/AE2Unity.jsx) 安装到 After Effects 的 `Scripts/ScriptUI Panels` 文件夹。
 2. 重启 After Effects。
-3. 从 `Window > ae2unityshader.jsx` 打开面板。
+3. 从 `Window > AE2Unity.jsx` 打开面板。
 4. 在 AE 面板中从 Unity Hub 项目列表选择 Unity project。
 5. 选择当前正在编辑的 composition，或指定某一个 composition。
 6. 选择导出模式，例如 `AEBridge: .ae2shader -> Unity shader/material`。
 7. 点击 `Run Export`。
 8. AE 面板会把 bridge job 写入 `.ae2unitybridge/inbox`。
-9. Unity 侧 AEBridge receiver 会把 payload 导入到 `Assets/ae2unityshader/Exports/<CompName>.ae2shader`。
+9. Unity 侧 AEBridge receiver 会把 payload 导入到 `Assets/AE2Unity/Exports/<CompName>.ae2shader`。
 10. Unity 生成 `<CompName>.generated.shader` 和 `<CompName>.generated.mat`。
 11. Unity 把结果写入 `.ae2unitybridge/outbox`，AE 面板可以通过 `Check Last Bridge Result` 读取结果。
 
-你也仍然可以使用直接导出和手动生成流程：`Direct .ae2shader into Unity Assets`、`Manual folder .ae2shader export`，以及 Unity 中的 `Assets > ae2unityshader > Generate Shader From AE2Shader`。
+你也仍然可以使用直接导出和手动生成流程：`Direct .ae2shader into Unity Assets`、`Manual folder .ae2shader export`，以及 Unity 中的 `Assets > AE2Unity > Generate Shader From AE2Shader`。
 
 ### After Effects 面板
 
@@ -186,7 +186,7 @@ AE 面板会读取 Unity Hub 本地的 `projects-v1.json` 和 `projectSortPrefer
 
 从 `Window` 菜单打开的面板可以拖拽 tab，并吸附到 AE 的侧边栏或保存进 workspace。如果通过 `File > Scripts > Run Script File...` 运行 JSX，AE 会把它作为独立 palette 打开，这适合测试，但不能吸附到 AE workspace 中。
 
-当面板被吸附到较窄侧边栏时，会切换到紧凑分页布局。紧凑模式会把控件分成 Export、Result、Paths 和 Media 几个区域。你可以用紧凑模式里的 `Up`/`Down`、方向键、Page Up/Page Down、小 scrollbar，或者在 AE 把滚轮事件传给 ScriptUI 时直接用鼠标滚轮切换区域。紧凑标题栏会在 Export 页显示 `Run` 按钮，也有 `Full` 按钮，可以在不移除停靠面板的情况下打开一个完整的独立 ae2unityshader 窗口。每个紧凑分页都有明确的小画幅尺寸，让 Export、Result、Paths 和 Media 控件在窄侧栏中都能保持可见。执行导出时，紧凑模式会先自动跳到 Result 页，再写入进度或最终状态。紧凑 Result 页会使用固定的小画幅结果框，确保状态文本在窄侧栏中仍然可见。
+当面板被吸附到较窄侧边栏时，会切换到紧凑分页布局。紧凑模式会把控件分成 Export、Result、Paths 和 Media 几个区域。你可以用紧凑模式里的 `Up`/`Down`、方向键、Page Up/Page Down、小 scrollbar，或者在 AE 把滚轮事件传给 ScriptUI 时直接用鼠标滚轮切换区域。紧凑标题栏会在 Export 页显示 `Run` 按钮，也有 `Full` 按钮，可以在不移除停靠面板的情况下打开一个完整的独立 AE2Unity 窗口。每个紧凑分页都有明确的小画幅尺寸，让 Export、Result、Paths 和 Media 控件在窄侧栏中都能保持可见。执行导出时，紧凑模式会先自动跳到 Result 页，再写入进度或最终状态。紧凑 Result 页会使用固定的小画幅结果框，确保状态文本在窄侧栏中仍然可见。
 
 独立窗口里有 `Compact` 和 `Full Size` 按钮。你也可以用 `Ctrl/Cmd+Shift+C` 把独立窗口切到紧凑模式，用 `Ctrl/Cmd+Shift+F` 恢复完整布局。较宽的浮窗或停靠布局会一次性显示完整的 path、media、refresh、reference frame 和 generation 选项。
 
@@ -205,7 +205,7 @@ AE 面板会读取 Unity Hub 本地的 `projects-v1.json` 和 `projectSortPrefer
 - Transform keyframes：anchor、position、scale、rotation、opacity。
 - Source footage 路径引用。
 - 用于 capability analysis 的基础 effect/mask metadata。
-- 通过 `ae2unityshader/Composite Unlit` 进行 Unity material preview。
+- 通过 `AE2Unity/Composite Unlit` 进行 Unity material preview。
 
 ### 已知 fallback
 
@@ -213,14 +213,14 @@ Importer 会把复杂功能标记为 warning，而不是假装它们已经被 sh
 
 ### Unity 设置
 
-打开 `Project Settings > ae2unityshader`。
+打开 `Project Settings > AE2Unity`。
 
 - `Auto Generate On Import`：启用后，Unity 每次导入 `.ae2shader` 都会自动生成 shader/material。
 - `Overwrite Generated Assets`：启用后，重复导出会更新同名 `.generated.shader` 和 `.generated.mat`。
 - `AEBridge Receiver Enabled`：启用后，Unity 会轮询 `.ae2unitybridge/inbox` 中的 AE jobs。
 - `Bridge Output Path`：bridge import 的默认 Unity asset 文件夹。
 
-Bridge 工具也可以从 `Tools > ae2unityshader` 使用。
+Bridge 工具也可以从 `Tools > AE2Unity` 使用。
 
 ### 开源许可证
 

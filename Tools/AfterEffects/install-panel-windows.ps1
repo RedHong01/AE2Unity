@@ -5,10 +5,13 @@ param(
 $ErrorActionPreference = "Stop"
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$sourceFile = Join-Path $scriptDir "ae2unityshader.jsx"
+$sourceFile = Join-Path $scriptDir "AE2Unity.jsx"
 $targetDir = Join-Path $AfterEffectsSupportFiles "Scripts\ScriptUI Panels"
-$targetFile = Join-Path $targetDir "ae2unityshader.jsx"
-$legacyTargetFile = Join-Path $targetDir "AE2UnityShaderExport.jsx"
+$targetFile = Join-Path $targetDir "AE2Unity.jsx"
+$legacyTargetFiles = @(
+    (Join-Path $targetDir "ae2unityshader.jsx"),
+    (Join-Path $targetDir "AE2UnityShaderExport.jsx")
+)
 
 if (-not (Test-Path $sourceFile)) {
     throw "Missing source file: $sourceFile"
@@ -16,10 +19,12 @@ if (-not (Test-Path $sourceFile)) {
 
 New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
 Copy-Item -Path $sourceFile -Destination $targetFile -Force
-if (Test-Path $legacyTargetFile) {
-    Remove-Item -Path $legacyTargetFile -Force
+foreach ($legacyTargetFile in $legacyTargetFiles) {
+    if (Test-Path $legacyTargetFile) {
+        Remove-Item -Path $legacyTargetFile -Force
+    }
 }
 
-Write-Host "Installed ae2unityshader panel:"
+Write-Host "Installed AE2Unity panel:"
 Write-Host $targetFile
-Write-Host "Restart After Effects, then open Window > ae2unityshader.jsx"
+Write-Host "Restart After Effects, then open Window > AE2Unity.jsx"

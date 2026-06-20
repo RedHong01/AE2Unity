@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+
+- Renamed the public project from `ae2unityshader` to `AE2Unity`.
+- Renamed the Unity package identifier from `com.redhong01.ae2unityshader` to `com.redhong01.ae2unity`.
+- Renamed namespaces and assembly definitions from `AE2UnityShader` to `AE2Unity`.
+- Renamed the After Effects panel file to [Tools/AfterEffects/AE2Unity.jsx](Tools/AfterEffects/AE2Unity.jsx).
+- Updated Unity menu paths, shader paths, default export folders, documentation, package metadata, and GitHub URLs to the `AE2Unity` name.
+- Preserved legacy AE settings lookup and installer cleanup for older `ae2unityshader.jsx` / `AE2UnityShaderExport.jsx` panel installs.
+
 ## 0.2.12
 
 - Rebalanced every compact page with explicit narrow-panel heights for Export, Result, Paths, and Media.
@@ -33,7 +42,7 @@
 
 ## 0.2.7
 
-- Added a compact-panel `Full` button that opens a full standalone ae2unityshader window from a narrow AE docked sidebar.
+- Added a compact-panel `Full` button that opens a full standalone AE2Unity window from a narrow AE docked sidebar.
 - Added standalone window `Compact` and `Full Size` controls.
 - Added best-effort standalone shortcuts: `Ctrl/Cmd+Shift+C` for compact mode and `Ctrl/Cmd+Shift+F` for full mode.
 
@@ -73,9 +82,9 @@
 
 ## 0.2.0
 
-- Renamed the public tool, AE panel, documentation, shader/menu paths, and GitHub repository to `ae2unityshader`.
-- Renamed the Unity package identifier to `com.redhong01.ae2unityshader`.
-- Renamed the After Effects ScriptUI panel file to `ae2unityshader.jsx` and installers now remove the legacy `AE2UnityShaderExport.jsx` panel.
+- Renamed the public tool, AE panel, documentation, shader/menu paths, and GitHub repository to `AE2Unity`.
+- Renamed the Unity package identifier to `com.redhong01.ae2unity`.
+- Renamed the After Effects ScriptUI panel file to `AE2Unity.jsx` and installers now remove the legacy `AE2UnityShaderExport.jsx` panel.
 - Added legacy AE settings fallback so existing saved paths and options migrate into the new panel name.
 
 ## 0.1.1

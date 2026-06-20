@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace AE2UnityShader.Editor
+namespace AE2Unity.Editor
 {
     internal static class AeBridgePaths
     {

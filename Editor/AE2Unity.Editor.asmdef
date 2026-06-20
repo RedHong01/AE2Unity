@@ -1,8 +1,8 @@
 {
-  "name": "AE2UnityShader.Editor",
-  "rootNamespace": "AE2UnityShader.Editor",
+  "name": "AE2Unity.Editor",
+  "rootNamespace": "AE2Unity.Editor",
   "references": [
-    "AE2UnityShader.Runtime"
+    "AE2Unity.Runtime"
   ],
   "includePlatforms": [
     "Editor"

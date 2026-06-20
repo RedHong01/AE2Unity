@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using AE2UnityShader;
+using AE2Unity;
 
-namespace AE2UnityShader.Editor
+namespace AE2Unity.Editor
 {
     internal static class Ae2ShaderCapabilityAnalyzer
     {

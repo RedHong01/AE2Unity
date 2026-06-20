@@ -1,6 +1,6 @@
 {
-  "name": "AE2UnityShader.Runtime",
-  "rootNamespace": "AE2UnityShader",
+  "name": "AE2Unity.Runtime",
+  "rootNamespace": "AE2Unity",
   "references": [],
   "includePlatforms": [],
   "excludePlatforms": [],

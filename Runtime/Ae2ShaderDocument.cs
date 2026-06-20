@@ -1,6 +1,6 @@
 using System;
 
-namespace AE2UnityShader
+namespace AE2Unity
 {
     [Serializable]
     public sealed class Ae2ShaderDocument

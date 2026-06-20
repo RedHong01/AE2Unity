@@ -1,4 +1,4 @@
-Shader "ae2unityshader/Composite Unlit"
+Shader "AE2Unity/Composite Unlit"
 {
     Properties
     {

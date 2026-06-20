@@ -1,4 +1,4 @@
-/* ae2unityshader exporter
+/* AE2Unity exporter
  * After Effects 2026 ExtendScript panel.
  *
  * Install options:
@@ -6,13 +6,13 @@
  * - Or copy into the After Effects ScriptUI Panels folder to dock it.
  */
 
-(function ae2UnityShaderExporter(thisObj) {
-    var SCRIPT_NAME = "ae2unityshader";
+(function ae2UnityExporter(thisObj) {
+    var SCRIPT_NAME = "AE2Unity";
     var SCHEMA_VERSION = "0.1.0";
-    var SETTINGS_SECTION = "ae2unityshader";
-    var LEGACY_SETTINGS_SECTIONS = ["DuoCurtainAE2UnityShader"];
-    var DEFAULT_UNITY_EXPORT_RELATIVE_PATH = "Assets/ae2unityshader/Exports";
-    var DEFAULT_MEDIA_EXPORT_RELATIVE_PATH = "Assets/ae2unityshader/Media";
+    var SETTINGS_SECTION = "AE2Unity";
+    var LEGACY_SETTINGS_SECTIONS = ["ae2unityshader", "DuoCurtainAE2UnityShader"];
+    var DEFAULT_UNITY_EXPORT_RELATIVE_PATH = "Assets/AE2Unity/Exports";
+    var DEFAULT_MEDIA_EXPORT_RELATIVE_PATH = "Assets/AE2Unity/Media";
     var BRIDGE_FOLDER_NAME = ".ae2unitybridge";
     var UI_LABEL_WIDTH = 136;
     var UI_BUTTON_WIDTH = 104;
@@ -111,7 +111,7 @@
         var compactFullWindowButton = compactPagerGroup.add("button", undefined, "Full");
         fixedControl(compactFullWindowButton, 42, 24);
         compactFullWindowButton.ae2unityPreserveCompactWidth = true;
-        setHelpTip(compactFullWindowButton, "Open a full standalone ae2unityshader window.");
+        setHelpTip(compactFullWindowButton, "Open a full standalone AE2Unity window.");
 
         panel.ae2unityCompactPager = {
             group: compactPagerGroup,
@@ -1987,7 +1987,7 @@
 
         var document = {
             schemaVersion: SCHEMA_VERSION,
-            exporter: "ae2unityshader exporter 0.2.0",
+            exporter: "AE2Unity exporter 0.3.0",
             exportedAt: new Date().toUTCString(),
             comp: collectComp(comp),
             layers: layers,
