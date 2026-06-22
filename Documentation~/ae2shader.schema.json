@@ -69,6 +69,12 @@
       "type": "array",
       "items": { "$ref": "#/$defs/asset" }
     },
+    "vectorAnimation": {
+      "$ref": "#/$defs/vectorAnimation"
+    },
+    "bakedFrames": {
+      "$ref": "#/$defs/bakedFrames"
+    },
     "warnings": {
       "type": "array",
       "items": {
@@ -175,6 +181,97 @@
         "height": { "type": "integer" },
         "frameRate": { "type": "number" },
         "duration": { "type": "number" }
+      }
+    },
+    "bakedFrames": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "relativePath": { "type": "string" },
+        "filePrefix": { "type": "string" },
+        "fileExtension": { "type": "string" },
+        "frameCount": { "type": "integer", "minimum": 0 },
+        "width": { "type": "integer", "minimum": 0 },
+        "height": { "type": "integer", "minimum": 0 },
+        "frameRate": { "type": "number", "exclusiveMinimum": 0 },
+        "duration": { "type": "number", "minimum": 0 },
+        "startTime": { "type": "number" },
+        "hasAlpha": { "type": "boolean" }
+      }
+    },
+    "vectorAnimation": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "vectorOnly": { "type": "boolean" },
+        "frameCount": { "type": "integer", "minimum": 0 },
+        "frameRate": { "type": "number", "exclusiveMinimum": 0 },
+        "duration": { "type": "number", "minimum": 0 },
+        "primitives": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/vectorPrimitive" }
+        }
+      }
+    },
+    "vectorPrimitive": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["rect", "path"] },
+        "order": { "type": "integer" },
+        "frames": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/vectorFrame" }
+        }
+      }
+    },
+    "vectorFrame": {
+      "type": "object",
+      "properties": {
+        "frameIndex": { "type": "integer", "minimum": 0 },
+        "visible": { "type": "boolean" },
+        "m00": { "type": "number" },
+        "m01": { "type": "number" },
+        "m02": { "type": "number" },
+        "m10": { "type": "number" },
+        "m11": { "type": "number" },
+        "m12": { "type": "number" },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number" },
+        "height": { "type": "number" },
+        "roundness": { "type": "number" },
+        "fillEnabled": { "type": "boolean" },
+        "fillR": { "type": "number" },
+        "fillG": { "type": "number" },
+        "fillB": { "type": "number" },
+        "fillA": { "type": "number" },
+        "strokeEnabled": { "type": "boolean" },
+        "strokeR": { "type": "number" },
+        "strokeG": { "type": "number" },
+        "strokeB": { "type": "number" },
+        "strokeA": { "type": "number" },
+        "strokeWidth": { "type": "number" },
+        "dash": { "type": "number" },
+        "gap": { "type": "number" },
+        "dashOffset": { "type": "number" },
+        "closed": { "type": "boolean" },
+        "path": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/vectorPathPoint" }
+        }
+      }
+    },
+    "vectorPathPoint": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "inX": { "type": "number" },
+        "inY": { "type": "number" },
+        "outX": { "type": "number" },
+        "outY": { "type": "number" }
       }
     }
   }

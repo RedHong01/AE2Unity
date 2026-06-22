@@ -11,6 +11,8 @@ namespace AE2Unity
         public Ae2ShaderComp comp = new Ae2ShaderComp();
         public Ae2ShaderLayer[] layers = Array.Empty<Ae2ShaderLayer>();
         public Ae2ShaderAsset[] assets = Array.Empty<Ae2ShaderAsset>();
+        public Ae2VectorAnimation vectorAnimation = new Ae2VectorAnimation();
+        public Ae2ShaderBakedFrames bakedFrames = new Ae2ShaderBakedFrames();
         public Ae2ShaderWarning[] warnings = Array.Empty<Ae2ShaderWarning>();
     }
 
@@ -155,6 +157,88 @@ namespace AE2Unity
         public int height;
         public float frameRate;
         public float duration;
+    }
+
+    [Serializable]
+    public sealed class Ae2ShaderBakedFrames
+    {
+        public bool enabled;
+        public string relativePath = string.Empty;
+        public string filePrefix = string.Empty;
+        public string fileExtension = "png";
+        public int frameCount;
+        public int width;
+        public int height;
+        public float frameRate = 24f;
+        public float duration;
+        public float startTime;
+        public bool hasAlpha = true;
+    }
+
+    [Serializable]
+    public sealed class Ae2VectorAnimation
+    {
+        public bool enabled;
+        public bool vectorOnly;
+        public int frameCount;
+        public float frameRate = 24f;
+        public float duration;
+        public Ae2VectorPrimitive[] primitives = Array.Empty<Ae2VectorPrimitive>();
+    }
+
+    [Serializable]
+    public sealed class Ae2VectorPrimitive
+    {
+        public string id = string.Empty;
+        public string name = string.Empty;
+        public string type = string.Empty;
+        public int order;
+        public Ae2VectorFrame[] frames = Array.Empty<Ae2VectorFrame>();
+    }
+
+    [Serializable]
+    public sealed class Ae2VectorFrame
+    {
+        public int frameIndex;
+        public bool visible = true;
+        public float m00 = 1f;
+        public float m01;
+        public float m02;
+        public float m10;
+        public float m11 = 1f;
+        public float m12;
+        public float x;
+        public float y;
+        public float width;
+        public float height;
+        public float roundness;
+        public bool fillEnabled;
+        public float fillR = 1f;
+        public float fillG = 1f;
+        public float fillB = 1f;
+        public float fillA = 1f;
+        public bool strokeEnabled;
+        public float strokeR;
+        public float strokeG;
+        public float strokeB;
+        public float strokeA = 1f;
+        public float strokeWidth;
+        public float dash;
+        public float gap;
+        public float dashOffset;
+        public bool closed = true;
+        public Ae2VectorPathPoint[] path = Array.Empty<Ae2VectorPathPoint>();
+    }
+
+    [Serializable]
+    public sealed class Ae2VectorPathPoint
+    {
+        public float x;
+        public float y;
+        public float inX;
+        public float inY;
+        public float outX;
+        public float outY;
     }
 
     [Serializable]

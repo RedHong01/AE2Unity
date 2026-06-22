@@ -45,8 +45,12 @@ namespace AE2Unity.Editor
                 return;
             }
 
-            Selection.activeObject = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(result.MaterialAssetPath);
-            EditorUtility.DisplayDialog("AE2Unity", $"Generated:\n{result.ShaderAssetPath}\n{result.MaterialAssetPath}", "OK");
+            var selectionPath = string.IsNullOrEmpty(result.PrefabAssetPath) ? result.MaterialAssetPath : result.PrefabAssetPath;
+            Selection.activeObject = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(selectionPath);
+            var generatedText = string.IsNullOrEmpty(result.PrefabAssetPath)
+                ? $"Generated:\n{result.ShaderAssetPath}\n{result.MaterialAssetPath}"
+                : $"Generated:\n{result.PrefabAssetPath}\n{result.ShaderAssetPath}\n{result.MaterialAssetPath}";
+            EditorUtility.DisplayDialog("AE2Unity", generatedText, "OK");
         }
 
         private static bool TryGetSelectedClip(out Ae2ShaderClip clip, out string assetPath)

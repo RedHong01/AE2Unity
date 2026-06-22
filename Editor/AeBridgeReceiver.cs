@@ -107,9 +107,13 @@ namespace AE2Unity.Editor
                 throw new FileNotFoundException("Bridge payload was not found.", payloadPath);
             }
 
+            var payloadJson = File.ReadAllText(payloadPath);
+            var payloadDocument = JsonUtility.FromJson<Ae2ShaderDocument>(payloadJson);
+
             var outputAssetFolder = NormalizeAssetFolder(string.IsNullOrWhiteSpace(job.unityOutputPath)
                 ? Ae2ShaderEditorSettings.instance.DefaultBridgeOutputPath
                 : job.unityOutputPath);
+            outputAssetFolder = AppendCompositionFolder(outputAssetFolder, payloadDocument?.comp?.name ?? job.compName);
 
             Directory.CreateDirectory(outputAssetFolder);
             var targetAssetPath = Path.Combine(outputAssetFolder, Path.GetFileName(payloadPath));
@@ -119,11 +123,13 @@ namespace AE2Unity.Editor
             }
 
             File.Copy(payloadPath, targetAssetPath, true);
+            CopyBakedFrames(payloadDocument?.bakedFrames, payloadPath, outputAssetFolder);
 
             var unityAssetPath = AeBridgePaths.ToAssetPath(targetAssetPath);
             IsProcessingBridgeJob = true;
             try
             {
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                 AssetDatabase.ImportAsset(unityAssetPath, ImportAssetOptions.ForceSynchronousImport);
 
                 var result = new AeBridgeResult
@@ -158,9 +164,22 @@ namespace AE2Unity.Editor
                 }
 
                 result.status = "Completed";
-                result.message = "Imported .ae2shader payload and generated shader/material.";
+                if (payloadDocument?.vectorAnimation != null && payloadDocument.vectorAnimation.enabled && payloadDocument.vectorAnimation.vectorOnly)
+                {
+                    result.message = "Imported vector AE composition and generated a playable prefab.";
+                }
+                else if (payloadDocument?.bakedFrames != null && payloadDocument.bakedFrames.enabled)
+                {
+                    result.message = "Imported baked AE animation at composition resolution and generated a playable prefab.";
+                }
+                else
+                {
+                    result.message = "Imported metadata-only .ae2shader payload and generated a preview shader/material.";
+                }
+
                 result.generatedShaderPath = generationResult.ShaderAssetPath;
                 result.generatedMaterialPath = generationResult.MaterialAssetPath;
+                result.generatedPrefabPath = generationResult.PrefabAssetPath;
                 return result;
             }
             finally
@@ -185,6 +204,34 @@ namespace AE2Unity.Editor
             return normalized;
         }
 
+        private static string AppendCompositionFolder(string outputAssetFolder, string compName)
+        {
+            var safeName = SanitizeFolderName(string.IsNullOrWhiteSpace(compName) ? "Untitled" : compName);
+            if (string.IsNullOrWhiteSpace(safeName))
+            {
+                safeName = "Untitled";
+            }
+
+            var normalized = NormalizeAssetFolder(outputAssetFolder);
+            var currentName = Path.GetFileName(normalized.TrimEnd('/'));
+            if (string.Equals(currentName, safeName, StringComparison.OrdinalIgnoreCase))
+            {
+                return normalized;
+            }
+
+            return NormalizeAssetFolder(Path.Combine(normalized, safeName));
+        }
+
+        private static string SanitizeFolderName(string value)
+        {
+            foreach (var invalidChar in Path.GetInvalidFileNameChars())
+            {
+                value = value.Replace(invalidChar, '_');
+            }
+
+            return value.Replace("\\", "_").Replace("/", "_").Trim();
+        }
+
         private static void WriteResult(AeBridgeResult result)
         {
             AeBridgePaths.EnsureFolders();
@@ -199,6 +246,54 @@ namespace AE2Unity.Editor
 
             var resultPath = Path.Combine(AeBridgePaths.Outbox, $"{result.jobId}.result.json");
             File.WriteAllText(resultPath, JsonUtility.ToJson(result, true));
+        }
+
+        private static void CopyBakedFrames(
+            Ae2ShaderBakedFrames bakedFrames,
+            string payloadPath,
+            string outputAssetFolder)
+        {
+            if (bakedFrames == null || !bakedFrames.enabled || bakedFrames.frameCount <= 0)
+            {
+                return;
+            }
+
+            var relativePath = (bakedFrames.relativePath ?? string.Empty).Replace('\\', '/').Trim('/');
+            if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathRooted(relativePath) || relativePath.Contains(".."))
+            {
+                throw new InvalidOperationException($"Invalid baked animation path: {bakedFrames.relativePath}");
+            }
+
+            var payloadDirectory = Path.GetDirectoryName(payloadPath) ?? AeBridgePaths.Payloads;
+            var sourceFolder = Path.Combine(payloadDirectory, relativePath);
+            if (!Directory.Exists(sourceFolder))
+            {
+                throw new DirectoryNotFoundException($"Baked animation folder was not found: {sourceFolder}");
+            }
+
+            var destinationFolder = Path.Combine(outputAssetFolder, relativePath);
+            if (Directory.Exists(destinationFolder))
+            {
+                Directory.Delete(destinationFolder, true);
+            }
+
+            CopyDirectory(sourceFolder, destinationFolder);
+        }
+
+        private static void CopyDirectory(string sourceFolder, string destinationFolder)
+        {
+            Directory.CreateDirectory(destinationFolder);
+            var files = Directory.GetFiles(sourceFolder, "*", SearchOption.TopDirectoryOnly);
+            for (var i = 0; i < files.Length; i++)
+            {
+                File.Copy(files[i], Path.Combine(destinationFolder, Path.GetFileName(files[i])), true);
+            }
+
+            var directories = Directory.GetDirectories(sourceFolder, "*", SearchOption.TopDirectoryOnly);
+            for (var i = 0; i < directories.Length; i++)
+            {
+                CopyDirectory(directories[i], Path.Combine(destinationFolder, Path.GetFileName(directories[i])));
+            }
         }
 
         private static void MoveReplace(string sourcePath, string targetPath)

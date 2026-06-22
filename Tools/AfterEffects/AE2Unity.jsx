@@ -173,14 +173,14 @@
         var modeGroup = createFormRow(panel, "Export Mode", "Choose which AE-to-Unity workflow to run.");
         modeGroup.ae2unityCompactVisibleHeight = UI_COMPACT_ROW_HEIGHT;
         var exportModeDropdown = modeGroup.add("dropdownlist", undefined, [
-            "AEBridge: .ae2shader -> Unity shader/material",
-            "AEBridge + Media Encoder video",
-            "Media Encoder video only",
-            "Direct .ae2shader into Unity Assets",
-            "Manual folder .ae2shader export"
+            "Bridge: Unity prefab",
+            "Bridge + video",
+            "Video only",
+            "Direct to Assets",
+            "Manual folder"
         ]);
         stretchControl(exportModeDropdown, UI_FIELD_WIDTH, 320);
-        setHelpTip(exportModeDropdown, "Send metadata to Unity, render media, or save files manually.");
+        setHelpTip(exportModeDropdown, "Bridge creates the Unity prefab/assets. Video modes use Adobe Media Encoder. Direct/manual save .ae2shader files without the bridge receiver.");
         exportModeDropdown.selection = getExportModeSelection(loadSetting("ExportMode", "bridge"));
 
         var mediaFolderGroup = createFormRow(panel, "Media Folder", "Unity Assets-relative folder for rendered media.");
@@ -219,6 +219,10 @@
         fixedControl(generateShaderCheckbox, 120);
         setHelpTip(generateShaderCheckbox, "Ask Unity to generate shader and material after import.");
         generateShaderCheckbox.value = loadSetting("GenerateShaderAndMaterial", "true") !== "false";
+        var bakeAnimationCheckbox = optionsGroup.add("checkbox", undefined, "Bake animation");
+        fixedControl(bakeAnimationCheckbox, 150);
+        setHelpTip(bakeAnimationCheckbox, "Render every composition frame to PNG so complex AE comps play correctly in the generated Unity material.");
+        bakeAnimationCheckbox.value = loadSetting("BakeAnimationFrames", "true") !== "false";
 
         var runExportButton = panel.add("button", undefined, "Run Export");
         runExportButton.alignment = ["fill", "top"];
@@ -369,6 +373,10 @@
             saveSetting("GenerateShaderAndMaterial", generateShaderCheckbox.value ? "true" : "false");
         };
 
+        bakeAnimationCheckbox.onClick = function () {
+            saveSetting("BakeAnimationFrames", bakeAnimationCheckbox.value ? "true" : "false");
+        };
+
         function runExportAction() {
             try {
                 showStatusResult(panel, status, "Running export...");
@@ -382,6 +390,7 @@
                     outputModuleTemplate: outputTemplateDropdown.selection ? outputTemplateDropdown.selection.text : "",
                     startMediaEncoder: startAmeCheckbox.value,
                     exportReferenceFrames: referenceFramesCheckbox.value,
+                    exportBakedFrames: bakeAnimationCheckbox.value,
                     generateShaderAndMaterial: generateShaderCheckbox.value
                 });
                 showStatusResult(panel, status, exportResult);
@@ -1277,6 +1286,7 @@
                 {
                     comp: config.comp,
                     exportReferenceFrames: config.exportReferenceFrames,
+                    exportBakedFrames: config.exportBakedFrames,
                     generateShaderAndMaterial: config.generateShaderAndMaterial
                 });
             messages.push("Bridge job sent: " + bridgeResult.jobId);
@@ -1301,7 +1311,8 @@
                 config.unityExportPath,
                 {
                     comp: config.comp,
-                    exportReferenceFrames: config.exportReferenceFrames
+                    exportReferenceFrames: config.exportReferenceFrames,
+                    exportBakedFrames: config.exportBakedFrames
                 });
             messages.push("Exported: " + directResult.fsName);
         }
@@ -1309,7 +1320,8 @@
         if (mode === "folder") {
             var folderResult = exportActiveCompToChosenFolder({
                 comp: config.comp,
-                exportReferenceFrames: config.exportReferenceFrames
+                exportReferenceFrames: config.exportReferenceFrames,
+                exportBakedFrames: config.exportBakedFrames
             });
             messages.push("Exported: " + folderResult.fsName);
         }
@@ -1748,7 +1760,9 @@
             throw new Error("Export cancelled.");
         }
 
-        return exportActiveCompToFolder(comp, folder, options);
+        var exportFolder = getCompositionOutputFolder(folder, comp);
+        ensureFolderExists(exportFolder);
+        return exportActiveCompToFolder(comp, exportFolder, options);
     }
 
     function exportActiveCompToUnityProject(projectPath, relativePath, options) {
@@ -1766,7 +1780,7 @@
         saveSetting("UnityProjectPath", projectFolder.fsName);
         saveSetting("UnityExportRelativePath", normalizedRelativePath);
 
-        var exportFolder = new Folder(joinPath(projectFolder.fsName, normalizedRelativePath));
+        var exportFolder = getCompositionOutputFolder(new Folder(joinPath(projectFolder.fsName, normalizedRelativePath)), comp);
         ensureFolderExists(exportFolder);
         return exportActiveCompToFolder(comp, exportFolder, options);
     }
@@ -1962,36 +1976,69 @@
     function exportActiveCompToFolder(comp, folder, options) {
         options = options || {};
         ensureFolderExists(folder);
-        var referenceFolder = new Folder(folder.fsName + "/reference_frames");
-        if (options.exportReferenceFrames !== false) {
-            ensureFolderExists(referenceFolder);
-        }
 
         var assetMap = {};
         var assets = [];
         var warnings = [];
         var layers = [];
+        var prepared = prepareCompositionForExport(comp, warnings);
+        var exportComp = prepared.comp;
+        var referenceFolder = new Folder(folder.fsName + "/reference_frames");
+        var bakedFrames = {
+            enabled: false,
+            relativePath: "",
+            filePrefix: "",
+            fileExtension: "png",
+            frameCount: 0,
+            width: comp.width,
+            height: comp.height,
+            frameRate: comp.frameRate,
+            duration: comp.duration,
+            startTime: 0,
+            hasAlpha: true
+        };
+        var vectorAnimation = {
+            enabled: false,
+            vectorOnly: false,
+            frameCount: 0,
+            frameRate: comp.frameRate,
+            duration: comp.duration,
+            primitives: []
+        };
 
         app.beginUndoGroup(SCRIPT_NAME);
         try {
-            for (var i = 1; i <= comp.numLayers; i++) {
-                layers.push(collectLayer(comp.layer(i), assetMap, assets, warnings));
+            if (options.exportReferenceFrames !== false) {
+                ensureFolderExists(referenceFolder);
             }
 
+            for (var i = 1; i <= exportComp.numLayers; i++) {
+                layers.push(collectLayer(exportComp.layer(i), assetMap, assets, warnings));
+            }
+
+            vectorAnimation = collectVectorAnimation(exportComp, warnings, prepared);
+
             if (options.exportReferenceFrames !== false) {
-                saveReferenceFrames(comp, referenceFolder, warnings);
+                saveReferenceFrames(exportComp, referenceFolder, warnings);
+            }
+
+            if (options.exportBakedFrames !== false && !(vectorAnimation.enabled && vectorAnimation.vectorOnly)) {
+                bakedFrames = saveBakedFrames(exportComp, folder, warnings);
             }
         } finally {
+            prepared.cleanup();
             app.endUndoGroup();
         }
 
         var document = {
             schemaVersion: SCHEMA_VERSION,
-            exporter: "AE2Unity exporter 0.3.0",
+            exporter: "AE2Unity exporter 0.5.1",
             exportedAt: new Date().toUTCString(),
             comp: collectComp(comp),
             layers: layers,
             assets: assets,
+            vectorAnimation: vectorAnimation,
+            bakedFrames: bakedFrames,
             warnings: warnings
         };
 
@@ -2004,6 +2051,635 @@
         outputFile.write(toJson(document));
         outputFile.close();
         return outputFile;
+    }
+
+    function getCompositionOutputFolder(baseFolder, comp) {
+        var safeName = sanitizeFileName(comp && comp.name ? comp.name : "Untitled");
+        var normalizedBase = normalizePathForCompare(baseFolder.fsName);
+        var normalizedName = safeName.toLowerCase();
+        if (baseName(normalizedBase) === normalizedName) {
+            return baseFolder;
+        }
+
+        return new Folder(baseFolder.fsName + "/" + safeName);
+    }
+
+    function prepareCompositionForExport(comp, warnings) {
+        var hadText = compositionHasTextRecursive(comp, {});
+        if (!hadText) {
+            return {
+                comp: comp,
+                hadText: false,
+                cleanup: function () {
+                }
+            };
+        }
+
+        var registry = {};
+        var duplicates = [];
+        var rootDuplicate = duplicateCompositionGraph(comp, registry, duplicates, warnings);
+        convertTextLayersToShapesRecursive(rootDuplicate, {}, warnings);
+        warnings.push({
+            code: "TEXT_CONVERTED_TO_SHAPES",
+            message: "Text layers were converted to temporary shape paths before export. The original After Effects project was not modified.",
+            layerId: ""
+        });
+
+        return {
+            comp: rootDuplicate,
+            hadText: true,
+            cleanup: function () {
+                for (var i = duplicates.length - 1; i >= 0; i--) {
+                    try {
+                        duplicates[i].remove();
+                    } catch (ignoredRemoveDuplicate) {
+                    }
+                }
+            }
+        };
+    }
+
+    function compositionHasTextRecursive(comp, seen) {
+        var key = compositionKey(comp);
+        if (seen[key]) {
+            return false;
+        }
+
+        seen[key] = true;
+        for (var i = 1; i <= comp.numLayers; i++) {
+            var layer = comp.layer(i);
+            if (layer instanceof TextLayer) {
+                return true;
+            }
+
+            if (layer instanceof AVLayer && layer.source instanceof CompItem) {
+                if (compositionHasTextRecursive(layer.source, seen)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    function duplicateCompositionGraph(comp, registry, duplicates, warnings) {
+        var key = compositionKey(comp);
+        if (registry[key]) {
+            return registry[key];
+        }
+
+        var duplicate = comp.duplicate();
+        duplicate.name = comp.name;
+        registry[key] = duplicate;
+        duplicates.push(duplicate);
+
+        for (var i = 1; i <= duplicate.numLayers; i++) {
+            var duplicateLayer = duplicate.layer(i);
+            if (!(duplicateLayer instanceof AVLayer) || !(duplicateLayer.source instanceof CompItem)) {
+                continue;
+            }
+
+            try {
+                var duplicateSource = duplicateCompositionGraph(duplicateLayer.source, registry, duplicates, warnings);
+                duplicateLayer.replaceSource(duplicateSource, false);
+            } catch (error) {
+                warnings.push({
+                    code: "PRECOMP_DUPLICATE_FAILED",
+                    message: "Could not duplicate nested composition for text conversion: " + error.toString(),
+                    layerId: "layer-" + duplicateLayer.index
+                });
+            }
+        }
+
+        return duplicate;
+    }
+
+    function convertTextLayersToShapesRecursive(comp, seen, warnings) {
+        var key = compositionKey(comp);
+        if (seen[key]) {
+            return;
+        }
+
+        seen[key] = true;
+        for (var i = 1; i <= comp.numLayers; i++) {
+            var layer = comp.layer(i);
+            if (layer instanceof AVLayer && layer.source instanceof CompItem) {
+                convertTextLayersToShapesRecursive(layer.source, seen, warnings);
+            }
+        }
+
+        var textLayers = [];
+        for (var j = 1; j <= comp.numLayers; j++) {
+            var candidate = comp.layer(j);
+            if (candidate instanceof TextLayer && candidate.enabled) {
+                textLayers.push(candidate);
+            }
+        }
+
+        if (textLayers.length === 0) {
+            return;
+        }
+
+        try {
+            comp.openInViewer();
+        } catch (ignoredOpenViewer) {
+        }
+
+        try {
+            for (var deselectIndex = 1; deselectIndex <= comp.numLayers; deselectIndex++) {
+                comp.layer(deselectIndex).selected = false;
+            }
+
+            for (var selectIndex = 0; selectIndex < textLayers.length; selectIndex++) {
+                textLayers[selectIndex].selected = true;
+            }
+
+            var commandId = app.findMenuCommandId("Create Shapes from Text");
+            if (commandId) {
+                app.executeCommand(commandId);
+            } else {
+                throw new Error("After Effects command not found: Create Shapes from Text");
+            }
+
+            for (var removeIndex = 0; removeIndex < textLayers.length; removeIndex++) {
+                try {
+                    textLayers[removeIndex].remove();
+                } catch (ignoredRemoveTextLayer) {
+                }
+            }
+        } catch (error) {
+            warnings.push({
+                code: "TEXT_TO_SHAPES_FAILED",
+                message: "Could not convert text to shape paths in temporary comp '" + comp.name + "': " + error.toString(),
+                layerId: ""
+            });
+        }
+    }
+
+    function compositionKey(comp) {
+        var id = safeValue(function () { return comp.id; }, "");
+        return id ? "id-" + id : "name-" + comp.name;
+    }
+
+    function collectVectorAnimation(comp, warnings, prepared) {
+        var frameRate = Math.max(1, Number(comp.frameRate));
+        var duration = Math.max(0, Number(comp.duration));
+        var frameCount = Math.max(1, Math.ceil(duration * frameRate - 0.000001));
+        var state = {
+            map: {},
+            primitives: [],
+            order: 0,
+            warnings: warnings,
+            unsupported: false,
+            preparedHadText: prepared && prepared.hadText,
+            emittedTextPathWarning: false
+        };
+        var startTime = safeNumber(function () { return comp.displayStartTime; }, 0);
+
+        for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+            var time = startTime + frameIndex / frameRate;
+            var lastValidTime = startTime + Math.max(0, duration - (0.5 / frameRate));
+            time = Math.min(time, lastValidTime);
+            collectCompVectorFrame(comp, time, frameIndex, matrixIdentity(), 1, "comp:" + sanitizeFileName(comp.name), state, {});
+        }
+
+        return {
+            enabled: state.primitives.length > 0,
+            vectorOnly: state.primitives.length > 0 && !state.unsupported,
+            frameCount: frameCount,
+            frameRate: frameRate,
+            duration: duration,
+            primitives: state.primitives
+        };
+    }
+
+    function collectCompVectorFrame(comp, time, frameIndex, parentMatrix, parentOpacity, pathPrefix, state, compStack) {
+        var key = compositionKey(comp);
+        if (compStack[key]) {
+            markVectorUnsupported(state, "PRECOMP_CYCLE", "Nested composition cycle detected: " + comp.name, "");
+            return;
+        }
+
+        compStack[key] = true;
+        for (var i = comp.numLayers; i >= 1; i--) {
+            var layer = comp.layer(i);
+            if (!isLayerVisibleAtTime(layer, time)) {
+                continue;
+            }
+
+            var layerType = getLayerType(layer);
+            var layerMatrix = matrixMultiply(parentMatrix, getLayerWorldMatrix(layer, time));
+            var layerOpacity = parentOpacity * getLayerOpacity(layer, time);
+            var layerPath = pathPrefix + "/layer-" + layer.index + "-" + sanitizeFileName(layer.name);
+
+            if (layerType === "shape") {
+                collectShapeLayerVectorFrame(layer, time, frameIndex, layerMatrix, layerOpacity, layerPath, state);
+            } else if (layerType === "precomp") {
+                var sourceTime = safeNumber(function () { return layer.sourceTime(time); }, time - layer.startTime);
+                collectCompVectorFrame(layer.source, sourceTime, frameIndex, layerMatrix, layerOpacity, layerPath, state, compStack);
+            } else if (layerType === "footage") {
+                markVectorUnsupported(state, "BITMAP_LAYER", "Bitmap or footage layer requires baked fallback: " + layer.name, "layer-" + layer.index);
+            } else if (layerType === "text") {
+                markVectorUnsupported(state, "TEXT_LAYER_NOT_CONVERTED", "Text layer remained after path conversion and requires baked fallback: " + layer.name, "layer-" + layer.index);
+            } else if (layer.enabled) {
+                markVectorUnsupported(state, "UNSUPPORTED_LAYER", "Unsupported layer type for vector export: " + layer.name + " (" + layerType + ")", "layer-" + layer.index);
+            }
+        }
+
+        compStack[key] = false;
+    }
+
+    function collectShapeLayerVectorFrame(layer, time, frameIndex, matrix, opacity, pathPrefix, state) {
+        var rootVectors = layer.property("ADBE Root Vectors Group");
+        if (!rootVectors) {
+            return;
+        }
+
+        var style = defaultVectorStyle();
+        collectVectorGroupFrame(rootVectors, time, frameIndex, matrix, opacity, pathPrefix + "/root", state, style);
+    }
+
+    function collectVectorGroupFrame(group, time, frameIndex, matrix, opacity, pathPrefix, state, inheritedStyle) {
+        var localStyle = mergeVectorStyle(inheritedStyle, collectDirectVectorStyle(group, time, opacity));
+
+        for (var i = 1; i <= group.numProperties; i++) {
+            var property = group.property(i);
+            if (!property || property.enabled === false) {
+                continue;
+            }
+
+            if (property.matchName === "ADBE Vector Group") {
+                var vectors = findProperty(property, "ADBE Vectors Group");
+                var transform = findProperty(property, "ADBE Vector Transform Group");
+                var groupOpacity = opacity * getVectorGroupOpacity(transform, time);
+                var groupMatrix = matrixMultiply(matrix, getVectorGroupMatrix(transform, time));
+                collectVectorGroupFrame(vectors, time, frameIndex, groupMatrix, groupOpacity, pathPrefix + "/group-" + i + "-" + sanitizeFileName(property.name), state, localStyle);
+            } else if (property.matchName === "ADBE Vector Shape - Rect") {
+                addRectPrimitiveFrame(property, time, frameIndex, matrix, localStyle, pathPrefix + "/rect-" + i, state);
+            } else if (property.matchName === "ADBE Vector Shape - Group") {
+                addPathPrimitiveFrame(property, time, frameIndex, matrix, localStyle, pathPrefix + "/path-" + i, state);
+            } else if (property.matchName === "ADBE Vector Graphic - Fill" ||
+                property.matchName === "ADBE Vector Graphic - Stroke" ||
+                property.matchName === "ADBE Vector Transform Group") {
+                continue;
+            } else if (property.matchName === "ADBE Vector Filter - Trim" ||
+                property.matchName === "ADBE Vector Filter - Repeater" ||
+                property.matchName === "ADBE Vector Filter - Merge") {
+                markVectorUnsupported(state, "UNSUPPORTED_VECTOR_OPERATOR", "Unsupported shape operator requires baked fallback: " + property.name, "");
+            }
+        }
+    }
+
+    function addRectPrimitiveFrame(rectProperty, time, frameIndex, matrix, style, id, state) {
+        var size = getVectorAtTime(findProperty(rectProperty, "ADBE Vector Rect Size"), time, [0, 0]);
+        var position = getVectorAtTime(findProperty(rectProperty, "ADBE Vector Rect Position"), time, [0, 0]);
+        var roundness = getNumberAtTime(findProperty(rectProperty, "ADBE Vector Rect Roundness"), time, 0);
+        var width = Number(size[0]);
+        var height = Number(size[1]);
+        var frame = makeVectorFrame(frameIndex, matrix, style);
+        frame.x = Number(position[0]) - width * 0.5;
+        frame.y = Number(position[1]) - height * 0.5;
+        frame.width = width;
+        frame.height = height;
+        frame.roundness = roundness;
+        addPrimitiveFrame(state, id, rectProperty.name, "rect", frame);
+    }
+
+    function addPathPrimitiveFrame(pathProperty, time, frameIndex, matrix, style, id, state) {
+        var shapeProperty = findProperty(pathProperty, "ADBE Vector Shape");
+        if (!shapeProperty) {
+            markVectorUnsupported(state, "MISSING_VECTOR_PATH", "Shape path has no path property: " + pathProperty.name, "");
+            return;
+        }
+
+        var shape = safeValue(function () { return shapeProperty.valueAtTime(time, false); }, null);
+        if (!shape || !shape.vertices || shape.vertices.length < 2) {
+            return;
+        }
+
+        if (state.preparedHadText && !state.emittedTextPathWarning) {
+            state.emittedTextPathWarning = true;
+            markVectorUnsupported(state, "TEXT_PATH_BAKED_FALLBACK", "Typography was converted to shape paths, then routed through baked fallback for pixel-accurate glyph holes/curves.", "");
+        }
+
+        var frame = makeVectorFrame(frameIndex, matrix, style);
+        frame.closed = shape.closed === true;
+        frame.path = sampleShapePath(shape, 8);
+        addPrimitiveFrame(state, id, pathProperty.name, "path", frame);
+    }
+
+    function addPrimitiveFrame(state, id, name, type, frame) {
+        var primitive = state.map[id];
+        if (!primitive) {
+            primitive = {
+                id: id,
+                name: name,
+                type: type,
+                order: state.order,
+                frames: []
+            };
+            state.order++;
+            state.map[id] = primitive;
+            state.primitives.push(primitive);
+        }
+
+        primitive.frames.push(frame);
+    }
+
+    function makeVectorFrame(frameIndex, matrix, style) {
+        return {
+            frameIndex: frameIndex,
+            visible: (style.fillEnabled || style.strokeEnabled) && style.opacity > 0.0001,
+            m00: matrix.m00,
+            m01: matrix.m01,
+            m02: matrix.m02,
+            m10: matrix.m10,
+            m11: matrix.m11,
+            m12: matrix.m12,
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            roundness: 0,
+            fillEnabled: style.fillEnabled,
+            fillR: style.fillColor[0],
+            fillG: style.fillColor[1],
+            fillB: style.fillColor[2],
+            fillA: style.fillOpacity * style.opacity,
+            strokeEnabled: style.strokeEnabled,
+            strokeR: style.strokeColor[0],
+            strokeG: style.strokeColor[1],
+            strokeB: style.strokeColor[2],
+            strokeA: style.strokeOpacity * style.opacity,
+            strokeWidth: style.strokeWidth,
+            dash: style.dash,
+            gap: style.gap,
+            dashOffset: style.dashOffset,
+            closed: true,
+            path: []
+        };
+    }
+
+    function defaultVectorStyle() {
+        return {
+            fillEnabled: false,
+            fillColor: [1, 1, 1],
+            fillOpacity: 1,
+            strokeEnabled: false,
+            strokeColor: [0, 0, 0],
+            strokeOpacity: 1,
+            strokeWidth: 1,
+            dash: 0,
+            gap: 0,
+            dashOffset: 0,
+            opacity: 1
+        };
+    }
+
+    function mergeVectorStyle(base, override) {
+        var result = defaultVectorStyle();
+        copyStyleInto(result, base);
+        copyStyleInto(result, override);
+        result.opacity = override && override.opacity !== undefined
+            ? override.opacity
+            : (base && base.opacity !== undefined ? base.opacity : 1);
+        return result;
+    }
+
+    function copyStyleInto(target, source) {
+        if (!source) {
+            return;
+        }
+
+        for (var key in source) {
+            if (source.hasOwnProperty(key) && source[key] !== undefined) {
+                target[key] = source[key];
+            }
+        }
+    }
+
+    function collectDirectVectorStyle(group, time, opacity) {
+        var style = { opacity: opacity };
+        for (var i = 1; i <= group.numProperties; i++) {
+            var property = group.property(i);
+            if (!property || property.enabled === false) {
+                continue;
+            }
+
+            if (property.matchName === "ADBE Vector Graphic - Fill") {
+                style.fillEnabled = true;
+                style.fillColor = normalizeColor(getVectorAtTime(findProperty(property, "ADBE Vector Fill Color"), time, [1, 1, 1]));
+                style.fillOpacity = getNumberAtTime(findProperty(property, "ADBE Vector Fill Opacity"), time, 100) / 100;
+            } else if (property.matchName === "ADBE Vector Graphic - Stroke") {
+                style.strokeEnabled = true;
+                style.strokeColor = normalizeColor(getVectorAtTime(findProperty(property, "ADBE Vector Stroke Color"), time, [0, 0, 0]));
+                style.strokeOpacity = getNumberAtTime(findProperty(property, "ADBE Vector Stroke Opacity"), time, 100) / 100;
+                style.strokeWidth = getNumberAtTime(findProperty(property, "ADBE Vector Stroke Width"), time, 1);
+                var dashes = findProperty(property, "ADBE Vector Stroke Dashes");
+                style.dash = getNumberAtTime(findProperty(dashes, "ADBE Vector Stroke Dash 1"), time, 0);
+                style.gap = getNumberAtTime(findProperty(dashes, "ADBE Vector Stroke Gap 1"), time, 0);
+                style.dashOffset = getNumberAtTime(findProperty(dashes, "ADBE Vector Stroke Offset"), time, 0);
+            }
+        }
+
+        return style;
+    }
+
+    function normalizeColor(value) {
+        var color = value instanceof Array ? value : [1, 1, 1];
+        return [
+            clamp01(Number(color.length > 0 ? color[0] : 1)),
+            clamp01(Number(color.length > 1 ? color[1] : 1)),
+            clamp01(Number(color.length > 2 ? color[2] : 1))
+        ];
+    }
+
+    function clamp01(value) {
+        if (!isFinite(value)) {
+            return 0;
+        }
+        return Math.max(0, Math.min(1, value));
+    }
+
+    function getVectorGroupMatrix(transform, time) {
+        if (!transform) {
+            return matrixIdentity();
+        }
+
+        var anchor = getVectorAtTime(findProperty(transform, "ADBE Vector Anchor"), time, [0, 0]);
+        var position = getVectorAtTime(findProperty(transform, "ADBE Vector Position"), time, [0, 0]);
+        var scale = getVectorAtTime(findProperty(transform, "ADBE Vector Scale"), time, [100, 100]);
+        var rotation = getNumberAtTime(findProperty(transform, "ADBE Vector Rotation"), time, 0);
+        return makeTransformMatrix(anchor, position, scale, rotation);
+    }
+
+    function getVectorGroupOpacity(transform, time) {
+        if (!transform) {
+            return 1;
+        }
+
+        return getNumberAtTime(
+            findProperty(transform, "ADBE Vector Group Opacity") || findProperty(transform, "ADBE Vector Opacity"),
+            time,
+            100) / 100;
+    }
+
+    function getLayerWorldMatrix(layer, time) {
+        var own = getLayerMatrix(layer, time);
+        if (layer.parent) {
+            return matrixMultiply(getLayerWorldMatrix(layer.parent, time), own);
+        }
+
+        return own;
+    }
+
+    function getLayerMatrix(layer, time) {
+        var transform = layer.property("ADBE Transform Group");
+        var anchor = getVectorAtTime(findProperty(transform, "ADBE Anchor Point"), time, [0, 0, 0]);
+        var position = getVectorAtTime(findProperty(transform, "ADBE Position"), time, [0, 0, 0]);
+        var scale = getVectorAtTime(findProperty(transform, "ADBE Scale"), time, [100, 100, 100]);
+        var rotation = getNumberAtTime(findProperty(transform, "ADBE Rotate Z") || findProperty(transform, "ADBE Rotation"), time, 0);
+        return makeTransformMatrix(anchor, position, scale, rotation);
+    }
+
+    function getLayerOpacity(layer, time) {
+        var transform = layer.property("ADBE Transform Group");
+        return getNumberAtTime(findProperty(transform, "ADBE Opacity"), time, 100) / 100;
+    }
+
+    function isLayerVisibleAtTime(layer, time) {
+        if (!layer || !layer.enabled) {
+            return false;
+        }
+
+        return time >= layer.inPoint && time < layer.outPoint;
+    }
+
+    function getNumberAtTime(property, time, fallback) {
+        if (!property) {
+            return fallback;
+        }
+
+        var value = safeValue(function () { return property.valueAtTime(time, false); }, fallback);
+        if (value instanceof Array) {
+            value = value.length > 0 ? value[0] : fallback;
+        }
+
+        value = Number(value);
+        return isFinite(value) ? value : fallback;
+    }
+
+    function getVectorAtTime(property, time, fallback) {
+        var value = property ? safeValue(function () { return property.valueAtTime(time, false); }, fallback) : fallback;
+        if (!(value instanceof Array)) {
+            value = fallback;
+        }
+
+        var result = [];
+        for (var i = 0; i < fallback.length; i++) {
+            var numberValue = Number(value.length > i ? value[i] : fallback[i]);
+            result.push(isFinite(numberValue) ? numberValue : fallback[i]);
+        }
+
+        return result;
+    }
+
+    function makeTransformMatrix(anchor, position, scale, rotation) {
+        var sx = Number(scale.length > 0 ? scale[0] : 100) / 100;
+        var sy = Number(scale.length > 1 ? scale[1] : sx * 100) / 100;
+        var px = Number(position.length > 0 ? position[0] : 0);
+        var py = Number(position.length > 1 ? position[1] : 0);
+        var ax = Number(anchor.length > 0 ? anchor[0] : 0);
+        var ay = Number(anchor.length > 1 ? anchor[1] : 0);
+        return matrixMultiply(
+            matrixTranslate(px, py),
+            matrixMultiply(
+                matrixRotate(rotation),
+                matrixMultiply(matrixScale(sx, sy), matrixTranslate(-ax, -ay))));
+    }
+
+    function matrixIdentity() {
+        return { m00: 1, m01: 0, m02: 0, m10: 0, m11: 1, m12: 0 };
+    }
+
+    function matrixTranslate(x, y) {
+        return { m00: 1, m01: 0, m02: x, m10: 0, m11: 1, m12: y };
+    }
+
+    function matrixScale(x, y) {
+        return { m00: x, m01: 0, m02: 0, m10: 0, m11: y, m12: 0 };
+    }
+
+    function matrixRotate(degrees) {
+        var radians = Number(degrees) * Math.PI / 180;
+        var c = Math.cos(radians);
+        var s = Math.sin(radians);
+        return { m00: c, m01: -s, m02: 0, m10: s, m11: c, m12: 0 };
+    }
+
+    function matrixMultiply(a, b) {
+        return {
+            m00: a.m00 * b.m00 + a.m01 * b.m10,
+            m01: a.m00 * b.m01 + a.m01 * b.m11,
+            m02: a.m00 * b.m02 + a.m01 * b.m12 + a.m02,
+            m10: a.m10 * b.m00 + a.m11 * b.m10,
+            m11: a.m10 * b.m01 + a.m11 * b.m11,
+            m12: a.m10 * b.m02 + a.m11 * b.m12 + a.m12
+        };
+    }
+
+    function sampleShapePath(shape, segmentsPerCurve) {
+        var result = [];
+        var vertices = shape.vertices;
+        var inTangents = shape.inTangents || [];
+        var outTangents = shape.outTangents || [];
+        var count = vertices.length;
+        var lastSegment = shape.closed ? count : count - 1;
+
+        for (var i = 0; i < lastSegment; i++) {
+            var next = (i + 1) % count;
+            var p0 = vertices[i];
+            var p3 = vertices[next];
+            var outTangent = outTangents[i] || [0, 0];
+            var inTangent = inTangents[next] || [0, 0];
+            var p1 = [p0[0] + outTangent[0], p0[1] + outTangent[1]];
+            var p2 = [p3[0] + inTangent[0], p3[1] + inTangent[1]];
+            var curved = Math.abs(outTangent[0]) + Math.abs(outTangent[1]) + Math.abs(inTangent[0]) + Math.abs(inTangent[1]) > 0.001;
+            var segments = curved ? segmentsPerCurve : 1;
+            for (var step = 0; step < segments; step++) {
+                var t = step / segments;
+                var point = cubicPoint(p0, p1, p2, p3, t);
+                result.push({ x: point[0], y: point[1], inX: 0, inY: 0, outX: 0, outY: 0 });
+            }
+        }
+
+        if (!shape.closed && count > 0) {
+            var last = vertices[count - 1];
+            result.push({ x: last[0], y: last[1], inX: 0, inY: 0, outX: 0, outY: 0 });
+        }
+
+        return result;
+    }
+
+    function cubicPoint(p0, p1, p2, p3, t) {
+        var oneMinusT = 1 - t;
+        var a = oneMinusT * oneMinusT * oneMinusT;
+        var b = 3 * oneMinusT * oneMinusT * t;
+        var c = 3 * oneMinusT * t * t;
+        var d = t * t * t;
+        return [
+            a * p0[0] + b * p1[0] + c * p2[0] + d * p3[0],
+            a * p0[1] + b * p1[1] + c * p2[1] + d * p3[1]
+        ];
+    }
+
+    function markVectorUnsupported(state, code, message, layerId) {
+        state.unsupported = true;
+        state.warnings.push({
+            code: code,
+            message: message,
+            layerId: layerId || ""
+        });
     }
 
     function writeTextFile(file, text) {
@@ -2361,6 +3037,7 @@
             var frameFile = new File(folder.fsName + "/" + sanitizeFileName(comp.name) + "_ref_" + i + ".png");
             try {
                 comp.saveFrameToPng(times[i], frameFile);
+                warnIfPngMissingAlpha(frameFile, warnings, "REFERENCE_FRAME_ALPHA_MISSING", "Reference frame does not contain an alpha channel: " + frameFile.name);
             } catch (error) {
                 warnings.push({
                     code: "REFERENCE_FRAME_FAILED",
@@ -2368,6 +3045,134 @@
                     layerId: ""
                 });
             }
+        }
+    }
+
+    function saveBakedFrames(comp, exportFolder, warnings) {
+        var safeCompName = sanitizeFileName(comp.name);
+        var relativePath = safeCompName + ".frames";
+        var framesFolder = new Folder(exportFolder.fsName + "/" + relativePath);
+        ensureFolderExists(framesFolder);
+
+        var oldFrames = framesFolder.getFiles("*.png");
+        for (var oldIndex = 0; oldIndex < oldFrames.length; oldIndex++) {
+            try {
+                if (oldFrames[oldIndex] instanceof File) {
+                    oldFrames[oldIndex].remove();
+                }
+            } catch (ignoredRemoveFrame) {
+            }
+        }
+
+        var frameRate = Math.max(1, Number(comp.frameRate));
+        var duration = Math.max(0, Number(comp.duration));
+        var frameCount = Math.max(1, Math.ceil(duration * frameRate - 0.000001));
+        var startTime = safeNumber(function () { return comp.displayStartTime; }, 0);
+        var filePrefix = safeCompName + "_frame_";
+        var writtenCount = 0;
+        var alphaOk = true;
+
+        for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+            var time = startTime + frameIndex / frameRate;
+            var lastValidTime = startTime + Math.max(0, duration - (0.5 / frameRate));
+            time = Math.min(time, lastValidTime);
+            var frameFile = new File(framesFolder.fsName + "/" + filePrefix + zeroPad(frameIndex, 5) + ".png");
+            try {
+                comp.saveFrameToPng(time, frameFile);
+                if (!pngHasAlphaChannelWithRetry(frameFile)) {
+                    alphaOk = false;
+                    warnings.push({
+                        code: "BAKED_FRAME_ALPHA_MISSING",
+                        message: "Baked PNG frame does not contain an alpha channel: " + frameFile.name,
+                        layerId: ""
+                    });
+                }
+                writtenCount++;
+            } catch (error) {
+                warnings.push({
+                    code: "BAKED_FRAME_FAILED",
+                    message: "Could not bake animation frame " + frameIndex + " at " + time + "s: " + error.toString(),
+                    layerId: ""
+                });
+                break;
+            }
+        }
+
+        return {
+            enabled: writtenCount === frameCount,
+            relativePath: relativePath,
+            filePrefix: filePrefix,
+            fileExtension: "png",
+            frameCount: writtenCount,
+            width: comp.width,
+            height: comp.height,
+            frameRate: frameRate,
+            duration: writtenCount / frameRate,
+            startTime: startTime,
+            hasAlpha: alphaOk
+        };
+    }
+
+    function warnIfPngMissingAlpha(file, warnings, code, message) {
+        if (!pngHasAlphaChannelWithRetry(file)) {
+            warnings.push({
+                code: code,
+                message: message,
+                layerId: ""
+            });
+        }
+    }
+
+    function pngHasAlphaChannelWithRetry(file) {
+        for (var attempt = 0; attempt < 5; attempt++) {
+            if (pngHasAlphaChannel(file)) {
+                return true;
+            }
+
+            sleepMilliseconds(80);
+        }
+
+        return false;
+    }
+
+    function pngHasAlphaChannel(file) {
+        if (!file || !file.exists) {
+            return false;
+        }
+
+        try {
+            file.encoding = "BINARY";
+            if (!file.open("r")) {
+                return false;
+            }
+
+            var bytes = file.read(26);
+            file.close();
+            if (!bytes || bytes.length < 26) {
+                return false;
+            }
+
+            var signature = [137, 80, 78, 71, 13, 10, 26, 10];
+            for (var i = 0; i < signature.length; i++) {
+                if (bytes.charCodeAt(i) !== signature[i]) {
+                    return false;
+                }
+            }
+
+            var colorType = bytes.charCodeAt(25);
+            return colorType === 4 || colorType === 6;
+        } catch (ignoredAlphaCheck) {
+            try {
+                file.close();
+            } catch (ignoredClose) {
+            }
+            return false;
+        }
+    }
+
+    function sleepMilliseconds(milliseconds) {
+        var end = new Date().getTime() + milliseconds;
+        while (new Date().getTime() < end) {
         }
     }
 
@@ -2443,6 +3248,14 @@
         return String(value).replace(/[\\\/\:\*\?\"\<\>\|]/g, "_");
     }
 
+    function zeroPad(value, width) {
+        var text = String(Math.max(0, Math.floor(Number(value))));
+        while (text.length < width) {
+            text = "0" + text;
+        }
+        return text;
+    }
+
     function createJobId(comp) {
         var stamp = new Date().getTime();
         var random = Math.floor(Math.random() * 1000000);
@@ -2452,6 +3265,11 @@
     function compactResultText(text) {
         var status = matchJsonString(text, "status") || "Unknown";
         var message = matchJsonString(text, "message") || "";
+        var prefab = matchJsonString(text, "generatedPrefabPath") || "";
+        if (prefab) {
+            return status + ": " + message + " -> " + prefab;
+        }
+
         var material = matchJsonString(text, "generatedMaterialPath") || "";
         if (material) {
             return status + ": " + message + " -> " + material;
@@ -2534,6 +3352,149 @@
             .replace(/\n/g, "\\n")
             .replace(/\t/g, "\\t") + "\"";
     }
+
+    function findCompositionByName(name) {
+        if (!app.project) {
+            return null;
+        }
+
+        for (var i = 1; i <= app.project.numItems; i++) {
+            var item = app.project.item(i);
+            if (item instanceof CompItem && item.name === name) {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    function listCompositionNames() {
+        var names = [];
+        if (!app.project) {
+            return names;
+        }
+
+        for (var i = 1; i <= app.project.numItems; i++) {
+            var item = app.project.item(i);
+            if (item instanceof CompItem) {
+                names.push(item.name);
+            }
+        }
+        return names;
+    }
+
+    function inspectPropertyTree(group, depth) {
+        var properties = [];
+        if (!group || !group.numProperties || depth > 12) {
+            return properties;
+        }
+
+        for (var i = 1; i <= group.numProperties; i++) {
+            var property = group.property(i);
+            if (!property) {
+                continue;
+            }
+
+            var entry = {
+                name: property.name,
+                matchName: property.matchName,
+                propertyType: String(property.propertyType),
+                valueType: String(property.propertyValueType),
+                numKeys: property.numKeys || 0,
+                children: []
+            };
+            if (property.numProperties) {
+                entry.children = inspectPropertyTree(property, depth + 1);
+            }
+            properties.push(entry);
+        }
+        return properties;
+    }
+
+    function inspectCompositionRecursive(comp, visited) {
+        var key = "comp-" + comp.id;
+        if (visited[key]) {
+            return null;
+        }
+        visited[key] = true;
+
+        var result = {
+            id: key,
+            name: comp.name,
+            width: comp.width,
+            height: comp.height,
+            duration: comp.duration,
+            frameRate: comp.frameRate,
+            layers: [],
+            nested: []
+        };
+
+        for (var i = 1; i <= comp.numLayers; i++) {
+            var layer = comp.layer(i);
+            var layerInfo = {
+                index: layer.index,
+                name: layer.name,
+                type: getLayerType(layer),
+                threeDLayer: safeBoolean(function () { return layer.threeDLayer; }, false),
+                sourceName: "",
+                properties: []
+            };
+            var rootVectors = layer.property("ADBE Root Vectors Group");
+            if (rootVectors) {
+                layerInfo.properties = inspectPropertyTree(rootVectors, 0);
+            }
+
+            if (layer instanceof AVLayer && layer.source instanceof CompItem) {
+                layerInfo.sourceName = layer.source.name;
+                var nested = inspectCompositionRecursive(layer.source, visited);
+                if (nested) {
+                    result.nested.push(nested);
+                }
+            }
+            result.layers.push(layerInfo);
+        }
+        return result;
+    }
+
+    $.global.AE2UnityAutomation = {
+        listCompositions: function () {
+            return listCompositionNames().join("\n");
+        },
+        inspectComposition: function (compName) {
+            var comp = findCompositionByName(compName);
+            if (!comp) {
+                throw new Error("Composition not found: " + compName);
+            }
+            return toJson(inspectCompositionRecursive(comp, {}));
+        },
+        exportCompositionToUnity: function (compName, projectPath, relativePath) {
+            var comp = findCompositionByName(compName);
+            if (!comp) {
+                throw new Error("Composition not found: " + compName);
+            }
+
+            var outputFile = exportActiveCompToUnityProject(projectPath, relativePath, {
+                comp: comp,
+                exportReferenceFrames: true,
+                exportBakedFrames: true
+            });
+            return outputFile.fsName;
+        },
+        exportCompositionToBridge: function (compName, projectPath, relativePath) {
+            var comp = findCompositionByName(compName);
+            if (!comp) {
+                throw new Error("Composition not found: " + compName);
+            }
+
+            var result = sendActiveCompToUnityBridge(projectPath, relativePath, {
+                comp: comp,
+                exportReferenceFrames: true,
+                exportBakedFrames: true,
+                generateShaderAndMaterial: true
+            });
+            return result.jobId;
+        }
+    };
 
     var panel = buildPanel(thisObj);
     if (panel instanceof Window) {

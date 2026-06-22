@@ -1,7 +1,9 @@
 {
   "name": "AE2Unity.Runtime",
   "rootNamespace": "AE2Unity",
-  "references": [],
+  "references": [
+    "UnityEngine.UI"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

@@ -81,7 +81,14 @@ namespace AE2Unity.Editor
                 return;
             }
 
-            Debug.Log($"AE2Unity auto-generated {result.ShaderAssetPath} and {result.MaterialAssetPath}.");
+            if (string.IsNullOrEmpty(result.PrefabAssetPath))
+            {
+                Debug.Log($"AE2Unity auto-generated {result.ShaderAssetPath} and {result.MaterialAssetPath}.");
+            }
+            else
+            {
+                Debug.Log($"AE2Unity auto-generated {result.ShaderAssetPath}, {result.MaterialAssetPath}, and {result.PrefabAssetPath}.");
+            }
         }
     }
 }

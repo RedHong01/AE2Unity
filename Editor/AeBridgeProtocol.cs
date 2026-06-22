@@ -44,5 +44,6 @@ namespace AE2Unity.Editor
         public string importedAssetPath = string.Empty;
         public string generatedShaderPath = string.Empty;
         public string generatedMaterialPath = string.Empty;
+        public string generatedPrefabPath = string.Empty;
     }
 }

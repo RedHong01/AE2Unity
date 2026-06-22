@@ -2,7 +2,8 @@
   "name": "AE2Unity.Editor",
   "rootNamespace": "AE2Unity.Editor",
   "references": [
-    "AE2Unity.Runtime"
+    "AE2Unity.Runtime",
+    "UnityEngine.UI"
   ],
   "includePlatforms": [
     "Editor"

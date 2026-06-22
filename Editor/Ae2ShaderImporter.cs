@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace AE2Unity.Editor
 {
-    [ScriptedImporter(1, "ae2shader")]
+    [ScriptedImporter(2, "ae2shader")]
     public sealed class Ae2ShaderImporter : ScriptedImporter
     {
         public override void OnImportAsset(AssetImportContext ctx)
@@ -91,6 +91,9 @@ namespace AE2Unity.Editor
             document.comp ??= new Ae2ShaderComp();
             document.layers ??= Array.Empty<Ae2ShaderLayer>();
             document.assets ??= Array.Empty<Ae2ShaderAsset>();
+            document.vectorAnimation ??= new Ae2VectorAnimation();
+            document.vectorAnimation.primitives ??= Array.Empty<Ae2VectorPrimitive>();
+            document.bakedFrames ??= new Ae2ShaderBakedFrames();
             document.warnings ??= Array.Empty<Ae2ShaderWarning>();
 
             foreach (var layer in document.layers)

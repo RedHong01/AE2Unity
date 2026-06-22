@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.5.1
+
+- Shortened AE panel export-mode labels so dropdown popups stay within the panel.
+- Added PNG alpha-channel validation and explicit Unity alpha import settings for baked fallback frames.
+
+## 0.5.0
+
+- Added vector-only composition export for shape/precomp compositions with sampled transform, fill, stroke, dash, and rectangle animation data.
+- Added generated playable prefabs using `Ae2VectorCompositionGraphic` instead of relying on white preview materials.
+- Added baked fallback prefabs that play original composition-resolution PNG frames through `Ae2BakedFramePlayer`.
+- Converted typography layers to temporary shape paths before export without modifying the source After Effects project.
+- Organized Unity imports and generated assets into `Exports/<CompositionName>/` folders.
+
+## 0.4.0
+
+- Added full-composition PNG frame baking for complex After Effects compositions.
+- Added automatic frame-atlas generation and time-based playback in generated materials.
+- Prevented metadata-only exports from silently appearing as successful white materials.
+
 ## 0.3.0
 
 - Renamed the public project from `ae2unityshader` to `AE2Unity`.
