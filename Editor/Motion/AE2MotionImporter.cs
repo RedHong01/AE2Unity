@@ -24,10 +24,11 @@ namespace AE2Unity.Editor
             ctx.AddObjectToAsset("AE2Motion Data", motionData);
             ctx.SetMainObject(motionData);
 
-            var shader = Shader.Find(AE2MotionAssetGenerator.ProceduralCircleShaderName);
+            var shaderName = AE2MotionAssetGenerator.GetShaderNameForMotionData(motionData);
+            var shader = Shader.Find(shaderName);
             if (shader == null)
             {
-                warnings.Add($"Preview shader '{AE2MotionAssetGenerator.ProceduralCircleShaderName}' was not found.");
+                warnings.Add($"Preview shader '{shaderName}' was not found.");
                 motionData.Initialize(document, json, warnings.ToArray());
                 return;
             }
@@ -103,7 +104,7 @@ namespace AE2Unity.Editor
                 }
                 else if (!AE2MotionEvaluator.IsRuntimeRenderable(layer.RendererHint))
                 {
-                    warnings.Add($"Layer '{layer.name}' exports as {layer.rendererHint}, but this MVP runtime currently renders ProceduralCircle only.");
+                    warnings.Add($"Layer '{layer.name}' exports as {layer.rendererHint}, but no runtime shader is currently mapped for that renderer hint.");
                 }
 
                 var expressions = layer.expressions ?? Array.Empty<string>();

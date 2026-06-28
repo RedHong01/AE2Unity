@@ -46,7 +46,7 @@ You can also add it directly to `Packages/manifest.json`:
 To pin a release, use a tag:
 
 ```json
-"com.redhong01.ae2unity": "https://github.com/RedHong01/AE2Unity.git#v0.6.0"
+"com.redhong01.ae2unity": "https://github.com/RedHong01/AE2Unity.git#v0.6.1"
 ```
 
 If the repository is private, Unity must have GitHub access through your local Git credentials.
@@ -72,17 +72,17 @@ Direct export and manual generation are still available through `Direct .ae2shad
 The `.ae2motion` path treats After Effects as the authoring tool and Unity as the realtime renderer:
 
 ```text
-AE Circle + Transform Keyframes
+AE Shape Layer + Transform/Trim Keyframes
 -> .ae2motion Motion Data
 -> AE2MotionData asset
 -> AE2MotionPlayer
 -> MaterialPropertyBlock
--> AE2Unity/Procedural/Circle Unlit
+-> AE2Unity/Procedural/Circle, Rect, or Stroke Unlit
 ```
 
 Use `Bridge: Motion runtime`, `Direct motion to Assets`, or `Manual motion folder` in [Tools/AfterEffects/AE2Unity.jsx](Tools/AfterEffects/AE2Unity.jsx). Unity imports the file with [Editor/Motion/AE2MotionImporter.cs](Editor/Motion/AE2MotionImporter.cs), stores it as [Runtime/Motion/AE2MotionData.cs](Runtime/Motion/AE2MotionData.cs), evaluates keyframes with [Runtime/Motion/AE2MotionEvaluator.cs](Runtime/Motion/AE2MotionEvaluator.cs), and binds values to shader properties through [Runtime/Motion/AE2ShaderPropertyBinder.cs](Runtime/Motion/AE2ShaderPropertyBinder.cs).
 
-The MVP realtime renderer supports a single procedural circle layer with position, scale, opacity, fill color, size/radius, and runtime looping. Rectangle, stroke, trim path, expressions, effects, masks, and non-shape layers are preserved as data/warnings so future renderer passes can support them without changing the bridge.
+The realtime renderer currently supports the first runtime-renderable shape layer in a motion document. Supported renderer hints are procedural circle, procedural rounded rectangle, and procedural open-path stroke with trim start/end. Expressions, effects, masks, complex paths, animated path vertices, and non-shape layers are preserved as data/warnings so future compiler passes can support them without changing the bridge.
 
 ### After Effects Panel
 
@@ -113,10 +113,11 @@ Standalone windows include `Compact` and `Full Size` buttons. You can also use `
 - Source footage path references.
 - Basic effect/mask metadata for capability analysis.
 - Unity material preview through `AE2Unity/Composite Unlit`.
-- `.ae2motion` motion data: composition timing, layer hierarchy, transform keyframes, ellipse/rectangle shape parameters, fill/stroke/trim metadata, renderer hints, and explicit warnings.
-- Runtime playback through [Runtime/Motion/AE2MotionPlayer.cs](Runtime/Motion/AE2MotionPlayer.cs) and the procedural circle shader [Runtime/Shaders/Procedural/AE2UnityProceduralCircle.shader](Runtime/Shaders/Procedural/AE2UnityProceduralCircle.shader).
+- `.ae2motion` motion data: composition timing, layer hierarchy, transform keyframes, ellipse/rectangle/open-path shape parameters, rectangle roundness, fill/stroke/trim metadata, renderer hints, and explicit warnings.
+- Runtime playback through [Runtime/Motion/AE2MotionPlayer.cs](Runtime/Motion/AE2MotionPlayer.cs), [Runtime/Motion/AE2MotionEvaluator.cs](Runtime/Motion/AE2MotionEvaluator.cs), and [Runtime/Motion/AE2ShaderPropertyBinder.cs](Runtime/Motion/AE2ShaderPropertyBinder.cs).
+- Procedural runtime shaders: [Runtime/Shaders/Procedural/AE2UnityProceduralCircle.shader](Runtime/Shaders/Procedural/AE2UnityProceduralCircle.shader), [Runtime/Shaders/Procedural/AE2UnityProceduralRect.shader](Runtime/Shaders/Procedural/AE2UnityProceduralRect.shader), and [Runtime/Shaders/Procedural/AE2UnityProceduralStroke.shader](Runtime/Shaders/Procedural/AE2UnityProceduralStroke.shader).
 - Motion schema reference: [Documentation~/ae2motion.schema.json](Documentation~/ae2motion.schema.json).
-- Motion sample: [Samples~/ProceduralCircleMotion/ProceduralCircle.ae2motion](Samples~/ProceduralCircleMotion/ProceduralCircle.ae2motion).
+- Motion samples: [Samples~/ProceduralCircleMotion/ProceduralCircle.ae2motion](Samples~/ProceduralCircleMotion/ProceduralCircle.ae2motion), [Samples~/ProceduralShapeMotion/ProceduralRect.ae2motion](Samples~/ProceduralShapeMotion/ProceduralRect.ae2motion), and [Samples~/ProceduralShapeMotion/ProceduralStroke.ae2motion](Samples~/ProceduralShapeMotion/ProceduralStroke.ae2motion).
 
 ### Known Fallbacks
 
@@ -183,7 +184,7 @@ https://github.com/RedHong01/AE2Unity.git
 如果希望锁定某个 release，可以使用 tag：
 
 ```json
-"com.redhong01.ae2unity": "https://github.com/RedHong01/AE2Unity.git#v0.6.0"
+"com.redhong01.ae2unity": "https://github.com/RedHong01/AE2Unity.git#v0.6.1"
 ```
 
 如果 repo 是 private，Unity 需要能够通过你本地的 Git 凭据访问 GitHub。
@@ -209,17 +210,17 @@ https://github.com/RedHong01/AE2Unity.git
 `.ae2motion` 路径会把 After Effects 作为 motion authoring tool，把 Unity 作为 realtime renderer：
 
 ```text
-AE Circle + Transform Keyframes
+AE Shape Layer + Transform/Trim Keyframes
 -> .ae2motion Motion Data
 -> AE2MotionData asset
 -> AE2MotionPlayer
 -> MaterialPropertyBlock
--> AE2Unity/Procedural/Circle Unlit
+-> AE2Unity/Procedural/Circle, Rect, or Stroke Unlit
 ```
 
 在 [Tools/AfterEffects/AE2Unity.jsx](Tools/AfterEffects/AE2Unity.jsx) 中选择 `Bridge: Motion runtime`、`Direct motion to Assets` 或 `Manual motion folder`。Unity 会用 [Editor/Motion/AE2MotionImporter.cs](Editor/Motion/AE2MotionImporter.cs) 导入文件，保存为 [Runtime/Motion/AE2MotionData.cs](Runtime/Motion/AE2MotionData.cs)，通过 [Runtime/Motion/AE2MotionEvaluator.cs](Runtime/Motion/AE2MotionEvaluator.cs) evaluate keyframes，并由 [Runtime/Motion/AE2ShaderPropertyBinder.cs](Runtime/Motion/AE2ShaderPropertyBinder.cs) 把结果写入 shader properties。
 
-当前 MVP realtime renderer 支持单个 procedural circle layer 的 position、scale、opacity、fill color、size/radius 和循环播放。Rectangle、stroke、trim path、expressions、effects、masks 和非 shape layers 会作为数据/warnings 保留下来，方便后续 renderer pass 扩展，而不需要重做 bridge。
+当前 realtime renderer 会渲染 motion document 中第一个可运行时渲染的 shape layer。已经支持 procedural circle、procedural rounded rectangle，以及带 trim start/end 的 procedural open-path stroke。Expressions、effects、masks、复杂 path、animated path vertices 和非 shape layers 会作为数据/warnings 保留下来，方便后续 compiler pass 扩展，而不需要重做 bridge。
 
 ### After Effects 面板
 
@@ -250,10 +251,11 @@ AE 面板会读取 Unity Hub 本地的 `projects-v1.json` 和 `projectSortPrefer
 - Source footage 路径引用。
 - 用于 capability analysis 的基础 effect/mask metadata。
 - 通过 `AE2Unity/Composite Unlit` 进行 Unity material preview。
-- `.ae2motion` motion data：composition timing、layer hierarchy、transform keyframes、ellipse/rectangle shape parameters、fill/stroke/trim metadata、renderer hints 和明确 warnings。
-- 通过 [Runtime/Motion/AE2MotionPlayer.cs](Runtime/Motion/AE2MotionPlayer.cs) 和 procedural circle shader [Runtime/Shaders/Procedural/AE2UnityProceduralCircle.shader](Runtime/Shaders/Procedural/AE2UnityProceduralCircle.shader) 进行 runtime playback。
+- `.ae2motion` motion data：composition timing、layer hierarchy、transform keyframes、ellipse/rectangle/open-path shape parameters、rectangle roundness、fill/stroke/trim metadata、renderer hints 和明确 warnings。
+- 通过 [Runtime/Motion/AE2MotionPlayer.cs](Runtime/Motion/AE2MotionPlayer.cs)、[Runtime/Motion/AE2MotionEvaluator.cs](Runtime/Motion/AE2MotionEvaluator.cs) 和 [Runtime/Motion/AE2ShaderPropertyBinder.cs](Runtime/Motion/AE2ShaderPropertyBinder.cs) 进行 runtime playback。
+- Procedural runtime shaders：[Runtime/Shaders/Procedural/AE2UnityProceduralCircle.shader](Runtime/Shaders/Procedural/AE2UnityProceduralCircle.shader)、[Runtime/Shaders/Procedural/AE2UnityProceduralRect.shader](Runtime/Shaders/Procedural/AE2UnityProceduralRect.shader) 和 [Runtime/Shaders/Procedural/AE2UnityProceduralStroke.shader](Runtime/Shaders/Procedural/AE2UnityProceduralStroke.shader)。
 - Motion schema 参考：[Documentation~/ae2motion.schema.json](Documentation~/ae2motion.schema.json)。
-- Motion sample：[Samples~/ProceduralCircleMotion/ProceduralCircle.ae2motion](Samples~/ProceduralCircleMotion/ProceduralCircle.ae2motion)。
+- Motion samples：[Samples~/ProceduralCircleMotion/ProceduralCircle.ae2motion](Samples~/ProceduralCircleMotion/ProceduralCircle.ae2motion)、[Samples~/ProceduralShapeMotion/ProceduralRect.ae2motion](Samples~/ProceduralShapeMotion/ProceduralRect.ae2motion) 和 [Samples~/ProceduralShapeMotion/ProceduralStroke.ae2motion](Samples~/ProceduralShapeMotion/ProceduralStroke.ae2motion)。
 
 ### 已知 fallback
 

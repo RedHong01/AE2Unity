@@ -17,6 +17,9 @@ namespace AE2Unity
         public Vector2 shapeCenter;
         public Vector2 shapeSize;
         public float shapeRadius;
+        public float cornerRadius;
+        public Vector2 pathStart;
+        public Vector2 pathEnd;
         public Color fillColor;
         public Color strokeColor;
         public float strokeWidth;
@@ -58,7 +61,9 @@ namespace AE2Unity
 
         public static bool IsRuntimeRenderable(AE2RendererHint rendererHint)
         {
-            return rendererHint == AE2RendererHint.ProceduralCircle;
+            return rendererHint == AE2RendererHint.ProceduralCircle ||
+                   rendererHint == AE2RendererHint.ProceduralRect ||
+                   rendererHint == AE2RendererHint.ProceduralStroke;
         }
 
         public static AE2MotionEvaluatedLayer EvaluateLayer(AE2MotionLayer layer, float time)
@@ -92,6 +97,9 @@ namespace AE2Unity
                 shapeCenter = Evaluate(shape.center, time),
                 shapeSize = size,
                 shapeRadius = radius,
+                cornerRadius = Evaluate(shape.cornerRadius, time),
+                pathStart = Evaluate(shape.pathStart, time),
+                pathEnd = Evaluate(shape.pathEnd, time),
                 fillColor = Evaluate(shape.fill, time),
                 strokeColor = Evaluate(shape.stroke, time),
                 strokeWidth = Evaluate(shape.strokeWidth, time),

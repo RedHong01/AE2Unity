@@ -13,6 +13,9 @@ namespace AE2Unity
         public static readonly int ShapeCenterId = Shader.PropertyToID("_AE_ShapeCenter");
         public static readonly int ShapeRadiusId = Shader.PropertyToID("_AE_ShapeRadius");
         public static readonly int ShapeSizeId = Shader.PropertyToID("_AE_ShapeSize");
+        public static readonly int CornerRadiusId = Shader.PropertyToID("_AE_CornerRadius");
+        public static readonly int PathStartId = Shader.PropertyToID("_AE_PathStart");
+        public static readonly int PathEndId = Shader.PropertyToID("_AE_PathEnd");
         public static readonly int FillColorId = Shader.PropertyToID("_AE_FillColor");
         public static readonly int StrokeColorId = Shader.PropertyToID("_AE_StrokeColor");
         public static readonly int StrokeWidthId = Shader.PropertyToID("_AE_StrokeWidth");
@@ -43,6 +46,9 @@ namespace AE2Unity
             block.SetVector(ShapeCenterId, new Vector4(layer.shapeCenter.x, layer.shapeCenter.y, 0f, 0f));
             block.SetFloat(ShapeRadiusId, layer.shapeRadius);
             block.SetVector(ShapeSizeId, new Vector4(layer.shapeSize.x, layer.shapeSize.y, 0f, 0f));
+            block.SetFloat(CornerRadiusId, layer.cornerRadius);
+            block.SetVector(PathStartId, new Vector4(layer.pathStart.x, layer.pathStart.y, 0f, 0f));
+            block.SetVector(PathEndId, new Vector4(layer.pathEnd.x, layer.pathEnd.y, 0f, 0f));
 
             var fill = layer.fillColor;
             block.SetColor(FillColorId, fill);
@@ -76,6 +82,9 @@ namespace AE2Unity
             material.SetVector(ShapeCenterId, new Vector4(layer.shapeCenter.x, layer.shapeCenter.y, 0f, 0f));
             material.SetFloat(ShapeRadiusId, layer.shapeRadius);
             material.SetVector(ShapeSizeId, new Vector4(layer.shapeSize.x, layer.shapeSize.y, 0f, 0f));
+            material.SetFloat(CornerRadiusId, layer.cornerRadius);
+            material.SetVector(PathStartId, new Vector4(layer.pathStart.x, layer.pathStart.y, 0f, 0f));
+            material.SetVector(PathEndId, new Vector4(layer.pathEnd.x, layer.pathEnd.y, 0f, 0f));
             material.SetColor(FillColorId, layer.fillColor);
             material.SetColor(StrokeColorId, layer.strokeColor);
             material.SetFloat(StrokeWidthId, layer.strokeWidth);

@@ -59,7 +59,7 @@ namespace AE2Unity
     [Serializable]
     public sealed class AE2MotionDocument
     {
-        public string schemaVersion = "0.2.0";
+        public string schemaVersion = "0.2.1";
         public string exporter = "AE2Unity Motion Exporter";
         public string exportedAt = string.Empty;
         public AE2MotionComp comp = new AE2MotionComp();
@@ -161,6 +161,9 @@ namespace AE2Unity
         public AE2AnimatedVector2 center = AE2AnimatedVector2.Zero();
         public AE2AnimatedVector2 size = AE2AnimatedVector2.Zero();
         public AE2AnimatedFloat radius = AE2AnimatedFloat.Zero();
+        public AE2AnimatedFloat cornerRadius = AE2AnimatedFloat.Zero();
+        public AE2AnimatedVector2 pathStart = AE2AnimatedVector2.Zero();
+        public AE2AnimatedVector2 pathEnd = AE2AnimatedVector2.Zero();
         public AE2AnimatedColor fill = AE2AnimatedColor.White();
         public AE2AnimatedColor stroke = AE2AnimatedColor.Clear();
         public AE2AnimatedFloat strokeWidth = AE2AnimatedFloat.Zero();
@@ -173,6 +176,9 @@ namespace AE2Unity
             center ??= AE2AnimatedVector2.Zero();
             size ??= AE2AnimatedVector2.Zero();
             radius ??= AE2AnimatedFloat.Zero();
+            cornerRadius ??= AE2AnimatedFloat.Zero();
+            pathStart ??= AE2AnimatedVector2.Zero();
+            pathEnd ??= AE2AnimatedVector2.Zero();
             fill ??= AE2AnimatedColor.White();
             stroke ??= AE2AnimatedColor.Clear();
             strokeWidth ??= AE2AnimatedFloat.Zero();
@@ -182,6 +188,9 @@ namespace AE2Unity
             center.Normalize();
             size.Normalize();
             radius.Normalize();
+            cornerRadius.Normalize();
+            pathStart.Normalize();
+            pathEnd.Normalize();
             fill.Normalize();
             stroke.Normalize();
             strokeWidth.Normalize();

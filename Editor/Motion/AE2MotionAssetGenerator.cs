@@ -27,7 +27,11 @@ namespace AE2Unity.Editor
     internal static class AE2MotionAssetGenerator
     {
         public const string ProceduralCircleShaderName = "AE2Unity/Procedural/Circle Unlit";
+        public const string ProceduralRectShaderName = "AE2Unity/Procedural/Rect Unlit";
+        public const string ProceduralStrokeShaderName = "AE2Unity/Procedural/Stroke Unlit";
         public const string ProceduralCircleShaderAssetPath = "Packages/com.redhong01.ae2unity/Runtime/Shaders/Procedural/AE2UnityProceduralCircle.shader";
+        public const string ProceduralRectShaderAssetPath = "Packages/com.redhong01.ae2unity/Runtime/Shaders/Procedural/AE2UnityProceduralRect.shader";
+        public const string ProceduralStrokeShaderAssetPath = "Packages/com.redhong01.ae2unity/Runtime/Shaders/Procedural/AE2UnityProceduralStroke.shader";
 
         public static AE2MotionGenerationResult Generate(AE2MotionData motionData, string sourcePath, bool overwriteExisting, bool generatePrefab = true)
         {
@@ -36,10 +40,12 @@ namespace AE2Unity.Editor
                 return new AE2MotionGenerationResult(false, string.Empty, string.Empty, string.Empty, "MotionData is null.");
             }
 
-            var shader = Shader.Find(ProceduralCircleShaderName);
+            var shaderName = GetShaderNameForMotionData(motionData);
+            var shaderPath = GetShaderAssetPathForMotionData(motionData);
+            var shader = Shader.Find(shaderName);
             if (shader == null)
             {
-                return new AE2MotionGenerationResult(false, ProceduralCircleShaderAssetPath, string.Empty, string.Empty, $"Shader '{ProceduralCircleShaderName}' was not found.");
+                return new AE2MotionGenerationResult(false, shaderPath, string.Empty, string.Empty, $"Shader '{shaderName}' was not found.");
             }
 
             var directory = Path.GetDirectoryName(sourcePath);
@@ -81,7 +87,7 @@ namespace AE2Unity.Editor
                 ? $"Generated motion material: {materialAssetPath}"
                 : $"Generated motion material and prefab: {materialAssetPath}, {prefabAssetPath}";
 
-            return new AE2MotionGenerationResult(true, ProceduralCircleShaderAssetPath, materialAssetPath, prefabAssetPath, message);
+            return new AE2MotionGenerationResult(true, shaderPath, materialAssetPath, prefabAssetPath, message);
         }
 
         public static GameObject CreatePreviewGameObject(AE2MotionData motionData, Material material = null)
@@ -127,6 +133,50 @@ namespace AE2Unity.Editor
             return count;
         }
 
+        public static string GetShaderNameForMotionData(AE2MotionData motionData)
+        {
+            return GetShaderNameForHint(GetFirstRenderableHint(motionData));
+        }
+
+        public static string GetShaderAssetPathForMotionData(AE2MotionData motionData)
+        {
+            return GetShaderAssetPathForHint(GetFirstRenderableHint(motionData));
+        }
+
+        private static AE2RendererHint GetFirstRenderableHint(AE2MotionData motionData)
+        {
+            var layers = motionData?.Document?.motion?.layers ?? Array.Empty<AE2MotionLayer>();
+            for (var i = 0; i < layers.Length; i++)
+            {
+                if (layers[i] != null && AE2MotionEvaluator.IsRuntimeRenderable(layers[i].RendererHint))
+                {
+                    return layers[i].RendererHint;
+                }
+            }
+
+            return AE2RendererHint.ProceduralCircle;
+        }
+
+        private static string GetShaderNameForHint(AE2RendererHint rendererHint)
+        {
+            return rendererHint switch
+            {
+                AE2RendererHint.ProceduralRect => ProceduralRectShaderName,
+                AE2RendererHint.ProceduralStroke => ProceduralStrokeShaderName,
+                _ => ProceduralCircleShaderName
+            };
+        }
+
+        private static string GetShaderAssetPathForHint(AE2RendererHint rendererHint)
+        {
+            return rendererHint switch
+            {
+                AE2RendererHint.ProceduralRect => ProceduralRectShaderAssetPath,
+                AE2RendererHint.ProceduralStroke => ProceduralStrokeShaderAssetPath,
+                _ => ProceduralCircleShaderAssetPath
+            };
+        }
+
         private static void ApplyMaterialDefaults(Material material, AE2MotionData motionData)
         {
             material.SetFloat(Shader.PropertyToID("_AE_Feather"), 1.5f);
@@ -138,7 +188,7 @@ namespace AE2Unity.Editor
 
         private static Material CreatePreviewMaterial(AE2MotionData motionData)
         {
-            var shader = Shader.Find(ProceduralCircleShaderName);
+            var shader = Shader.Find(GetShaderNameForMotionData(motionData));
             if (shader == null)
             {
                 return null;

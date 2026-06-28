@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.1
+
+- Added procedural rounded rectangle and procedural open-path stroke runtime shaders.
+- Updated `.ae2motion` schema to `0.2.1` with `cornerRadius`, `pathStart`, and `pathEnd` shape fields.
+- Updated the AE Motion exporter to emit rectangle roundness and simple shape-path endpoints for procedural stroke rendering.
+- Updated runtime generation to select circle, rectangle, or stroke shaders from the first renderable `rendererHint`.
+- Added Procedural Shape Motion samples for rectangle and trimmed stroke playback.
+
 ## 0.6.0
 
 - Added the `.ae2motion` motion-data schema for AE-authored keyframes, procedural shape parameters, renderer hints, expressions, and warnings.

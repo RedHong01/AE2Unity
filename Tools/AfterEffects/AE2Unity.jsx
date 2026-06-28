@@ -9,7 +9,7 @@
 (function ae2UnityExporter(thisObj) {
     var SCRIPT_NAME = "AE2Unity";
     var SCHEMA_VERSION = "0.1.0";
-    var MOTION_SCHEMA_VERSION = "0.2.0";
+    var MOTION_SCHEMA_VERSION = "0.2.1";
     var SETTINGS_SECTION = "AE2Unity";
     var LEGACY_SETTINGS_SECTIONS = ["ae2unityshader", "DuoCurtainAE2UnityShader"];
     var DEFAULT_UNITY_EXPORT_RELATIVE_PATH = "Assets/AE2Unity/Exports";
@@ -2280,7 +2280,7 @@
 
         return {
             schemaVersion: MOTION_SCHEMA_VERSION,
-            exporter: "AE2Unity Motion Exporter 0.6.0",
+            exporter: "AE2Unity Motion Exporter 0.6.1",
             exportedAt: new Date().toUTCString(),
             comp: collectComp(comp),
             motion: {
@@ -2337,12 +2337,6 @@
         }
 
         var rendererHint = detectRendererHint(layer, shape, options);
-        if (rendererHint !== "ProceduralCircle" && rendererHint !== "UnsupportedShape") {
-            layerWarnings.push(createMotionWarning(
-                "UNITY_RUNTIME_MVP",
-                "This shape is recognized but the current Unity runtime shader only renders ProceduralCircle.",
-                layerId));
-        }
 
         var effects = collectEffects(layer, layerWarnings);
 
@@ -2414,7 +2408,7 @@
         if (!state.hasGeometry) {
             warnings.push(createMotionWarning(
                 "SHAPE_GEOMETRY_UNSUPPORTED",
-                "No supported ellipse or rectangle path was found in this shape layer.",
+                "No supported ellipse, rectangle, or simple open path was found in this shape layer.",
                 layerId));
         }
 
@@ -2443,7 +2437,10 @@
                 state.shape.center = collectMotionAnimatedVector2(findProperty(property, "ADBE Vector Rect Position"), [0, 0], options);
                 state.shape.size = collectMotionAnimatedVector2(findProperty(property, "ADBE Vector Rect Size"), [100, 100], options);
                 state.shape.radius = collectMotionAnimatedFloat(null, 0, options);
+                state.shape.cornerRadius = collectMotionAnimatedFloat(findProperty(property, "ADBE Vector Rect Roundness"), 0, options);
                 state.hasGeometry = true;
+            } else if (property.matchName === "ADBE Vector Shape - Group" && !state.hasGeometry) {
+                collectMotionPathLineGeometry(property, state, options, warnings, layerId);
             } else if (property.matchName === "ADBE Vector Graphic - Fill" && !state.hasFill) {
                 state.shape.fill = collectMotionAnimatedColor(findProperty(property, "ADBE Vector Fill Color"), [1, 1, 1, 1], options);
                 applyStaticOpacityToMotionColor(state.shape.fill, findProperty(property, "ADBE Vector Fill Opacity"), warnings, layerId, "FILL_OPACITY_KEYS_UNSUPPORTED");
@@ -2467,6 +2464,86 @@
 
             collectShapeLayerGeometryRecursive(property, state, options, warnings, layerId);
         }
+    }
+
+    function collectMotionPathLineGeometry(pathProperty, state, options, warnings, layerId) {
+        var shapeProperty = findProperty(pathProperty, "ADBE Vector Shape");
+        if (!shapeProperty) {
+            warnings.push(createMotionWarning(
+                "MISSING_SHAPE_PATH",
+                "Shape path has no ADBE Vector Shape property.",
+                layerId));
+            return;
+        }
+
+        var shape = safeValue(function () { return shapeProperty.value; }, null);
+        if (!shape || !shape.vertices || shape.vertices.length < 2) {
+            warnings.push(createMotionWarning(
+                "PATH_VERTEX_COUNT_UNSUPPORTED",
+                "Shape path needs at least two vertices to become a procedural stroke.",
+                layerId));
+            return;
+        }
+
+        var vertices = shape.vertices;
+        var start = vertices[0];
+        var end = vertices[vertices.length - 1];
+        state.shape.kind = "path";
+        state.shape.center = collectMotionAnimatedVector2(null, [0, 0], options);
+        state.shape.size = collectMotionAnimatedVector2(null, [
+            Math.abs(Number(end[0]) - Number(start[0])),
+            Math.abs(Number(end[1]) - Number(start[1]))
+        ], options);
+        state.shape.pathStart = collectMotionAnimatedVector2(null, start, options);
+        state.shape.pathEnd = collectMotionAnimatedVector2(null, end, options);
+        state.hasGeometry = true;
+
+        if (shape.closed === true) {
+            warnings.push(createMotionWarning(
+                "PATH_CLOSED_APPROXIMATED",
+                "Closed shape paths are approximated as a single stroke from first vertex to last vertex.",
+                layerId));
+        }
+
+        if (vertices.length > 2) {
+            warnings.push(createMotionWarning(
+                "PATH_MULTI_VERTEX_APPROXIMATED",
+                "Multi-vertex paths are approximated as one line segment from first vertex to last vertex.",
+                layerId));
+        }
+
+        if (pathHasTangents(shape)) {
+            warnings.push(createMotionWarning(
+                "PATH_CURVE_APPROXIMATED",
+                "Bezier path tangents are not evaluated by the procedural stroke shader yet.",
+                layerId));
+        }
+
+        if (safeNumber(function () { return shapeProperty.numKeys; }, 0) > 0) {
+            warnings.push(createMotionWarning(
+                "PATH_KEYFRAMES_UNSUPPORTED",
+                "Animated path vertices are exported from the current value only in this runtime pass.",
+                layerId));
+        }
+    }
+
+    function pathHasTangents(shape) {
+        return tangentListHasNonZero(shape && shape.inTangents) || tangentListHasNonZero(shape && shape.outTangents);
+    }
+
+    function tangentListHasNonZero(points) {
+        if (!points || !points.length) {
+            return false;
+        }
+
+        for (var i = 0; i < points.length; i++) {
+            var point = points[i];
+            if (point && point.length >= 2 && (Math.abs(Number(point[0])) > 0.001 || Math.abs(Number(point[1])) > 0.001)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     function detectRendererHint(layer, shape, options) {
@@ -2493,6 +2570,9 @@
             center: collectMotionAnimatedVector2(null, [0, 0], {}),
             size: collectMotionAnimatedVector2(null, [0, 0], {}),
             radius: collectMotionAnimatedFloat(null, 0, {}),
+            cornerRadius: collectMotionAnimatedFloat(null, 0, {}),
+            pathStart: collectMotionAnimatedVector2(null, [0, 0], {}),
+            pathEnd: collectMotionAnimatedVector2(null, [0, 0], {}),
             fill: collectMotionAnimatedColor(null, [1, 1, 1, 1], {}),
             stroke: collectMotionAnimatedColor(null, [0, 0, 0, 0], {}),
             strokeWidth: collectMotionAnimatedFloat(null, 0, {}),

@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://redhong01.github.io/AE2Unity/schemas/ae2motion-0.2.0.schema.json",
+  "$id": "https://redhong01.github.io/AE2Unity/schemas/ae2motion-0.2.1.schema.json",
   "title": "AE2Unity Motion Export",
   "type": "object",
   "required": ["schemaVersion", "comp", "motion"],
   "properties": {
-    "schemaVersion": { "type": "string", "const": "0.2.0" },
+    "schemaVersion": { "type": "string", "const": "0.2.1" },
     "exporter": { "type": "string" },
     "exportedAt": { "type": "string" },
     "comp": {
@@ -70,6 +70,9 @@
         "center": { "$ref": "#/$defs/animatedVector2" },
         "size": { "$ref": "#/$defs/animatedVector2" },
         "radius": { "$ref": "#/$defs/animatedFloat" },
+        "cornerRadius": { "$ref": "#/$defs/animatedFloat" },
+        "pathStart": { "$ref": "#/$defs/animatedVector2" },
+        "pathEnd": { "$ref": "#/$defs/animatedVector2" },
         "fill": { "$ref": "#/$defs/animatedColor" },
         "stroke": { "$ref": "#/$defs/animatedColor" },
         "strokeWidth": { "$ref": "#/$defs/animatedFloat" },
